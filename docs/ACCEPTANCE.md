@@ -6,7 +6,8 @@ Record the client version, date, result and any screenshot for each scenario on 
 
 | Scenario | Expected result | Result |
 |---|---|---|
-| Admin assignment | Add-in appears only for the pilot users | Pending |
+| Admin assignment | Saved deployment targets the agreed pilot user only | Passed in Microsoft 365 admin centre, 8 September 2026 |
+| Outlook availability | Add-in appears in the pilot user's Outlook Apps menu | Pending propagation; absent on initial web check |
 | Connect Microsoft 365 | Sign-in succeeds for the correct tenant; name/title/business phone match the directory | Pending |
 | New HTML message | ARK logo plus small linked Artesian wordmark after “Home of” | Pending |
 | Reply / reply all / forward | Compact signature under the new reply, not at the bottom of quoted history | Pending |
