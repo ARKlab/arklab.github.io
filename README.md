@@ -4,7 +4,7 @@ One company signature, managed centrally for Mac, Windows and web Outlook.
 
 The shared design pairs ARK with “Home of” followed by a small official Artesian wordmark, linking to https://www.artesian.cloud/. The descriptor is **Energy markets. Managed data services. Technology.** New messages use the full design; replies and forwards use a compact version.
 
-**Status: pilot implementation. Microsoft 365 registration, consent and Outlook acceptance testing are still required. Automatic insertion is paused by default.**
+**Status: single-user pilot setup. The Microsoft 365 application is registered with delegated `User.Read` only. Add-in assignment, user connection and Outlook acceptance testing are still required. Automatic insertion is paused.**
 
 ## How it works
 

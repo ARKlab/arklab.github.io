@@ -17,6 +17,7 @@ Record the client version, date, result and any screenshot for each scenario on 
 | Images blocked | Employee details remain readable; inline logo behaviour checked | Pending |
 | Missing job title, phone or location | Missing lines are omitted | Pending |
 | Repeated Refresh | Signature replaces itself; no duplicate logo attachments | Pending |
+| Existing Outlook signature | Company signature replaces the signature in the new message without duplicates; saved personal templates remain intact | Pending |
 | Switch approved sending identity | Current sender's identity; no borrowed title/phone from a different account | Pending |
 | Unapproved sending domain | Notice appears and the user checks the remaining signature | Pending |
 | Signed out / authentication expired | Existing signature remains; connection/retry guidance appears | Pending |
