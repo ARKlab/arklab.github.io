@@ -4,7 +4,8 @@ import {readFile} from 'node:fs/promises';
 import {profileForSender,renderSignature,plainSignature} from '../src/render.js';
 import {applySignature,completeEvent} from '../src/office-flow.js';
 
-const branding=JSON.parse(await readFile(new URL('../branding.json',import.meta.url)));
+// Stable fixtures keep routine company configuration edits independent of test expectations.
+const branding={schemaVersion:1,descriptor:'Energy markets. Data. Technology.',relationship:'Home of',arkWebsite:'https://www.ark-energy.eu/en',arkWebsiteLabel:'ark-energy.eu',artesianWebsite:'',artesianWebsiteLabel:'artesian.cloud',showOfficeLocation:true,includeMobilePhone:false,maxPhoneNumbers:2,compactReplies:true,approvedSenderDomains:['ark-energy.eu','artesian.cloud']};
 const bundle={enabled:true,branding,revision:'test123',assets:{ark:{filename:'ark-test.png',base64:'eA=='},artesian:{filename:'artesian-test.png',base64:'eA=='}},templates:{full:await readFile(new URL('../templates/full.html',import.meta.url),'utf8'),reply:await readFile(new URL('../templates/reply.html',import.meta.url),'utf8')}};
 const graph={displayName:'Alex Example',mail:'alex@ark-energy.eu',userPrincipalName:'alex@ark-energy.eu',jobTitle:'Director',businessPhones:['+353 83 111 2222'],mobilePhone:'+39 333 111 2222',officeLocation:'Dublin'};
 const sender={displayName:'Alex Example',emailAddress:'alex@ark-energy.eu'};
