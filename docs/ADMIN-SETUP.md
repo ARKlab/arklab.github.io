@@ -63,7 +63,7 @@ When ready to test automatic insertion, set `enabled` to `true` and publish. The
 
 ## 5. Roll out after acceptance
 
-Complete [ACCEPTANCE.md](ACCEPTANCE.md) with real send/receive tests. After the pilot is accepted, expand the deployment group. Keep a documented local signature fallback until availability and client coverage are established. Microsoft notes centrally deployed add-ins can take up to 24 hours to appear.
+Complete [ACCEPTANCE.md](ACCEPTANCE.md) with real send/receive tests. After the pilot is accepted, expand the deployment group. Keep a documented local signature fallback until availability and client coverage are established. The Microsoft 365 deployment confirmation advises allowing up to 72 hours for the add-in to appear and says users may need to relaunch Microsoft 365.
 
 For routine wording or branding updates, edit `branding.json` or the templates and publish. Administrator reinstall is normally unnecessary for content changes. Manifest changes — new URLs, IDs, permissions, events or requirements — need a manifest version bump and an administrator-managed update.
 
@@ -78,4 +78,6 @@ For routine wording or branding updates, edit `branding.json` or the templates a
 
 The single-tenant **ARK central signatures** app is registered. Its identifiers are configured in `deployment.json`, and its only requested Graph permission is delegated `User.Read`. No client secret is used.
 
-The add-in still needs to be assigned to the agreed single pilot user, connected in Outlook and tested. Automatic insertion remains paused. Employee records and the pilot user's contact details are not stored in this repository.
+On 8 September 2026, Microsoft 365 reported **Deployment completed**. The saved assignment was verified as **Just me**, matching the agreed pilot account, with no other users or groups selected. The user explicitly approved the installation capabilities: `ReadWriteItem`, `SendReceiveData` and `ProfileAccess`.
+
+The initial Outlook web Apps menu has not yet shown the new add-in. User connection, preview and real Outlook acceptance remain pending. Automatic insertion remains paused. Employee records and the pilot user's contact details are not stored in this repository.
