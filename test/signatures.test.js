@@ -5,7 +5,7 @@ import {profileForSender,renderSignature,plainSignature} from '../src/render.js'
 import {applySignature,completeEvent} from '../src/office-flow.js';
 
 // Stable fixtures keep routine company configuration edits independent of test expectations.
-const branding={schemaVersion:1,descriptor:'Energy markets. Data. Technology.',relationship:'Home of',arkWebsite:'https://www.ark-energy.eu/en',arkWebsiteLabel:'ark-energy.eu',artesianWebsite:'',artesianWebsiteLabel:'artesian.cloud',showOfficeLocation:true,includeMobilePhone:false,maxPhoneNumbers:2,compactReplies:true,approvedSenderDomains:['ark-energy.eu','artesian.cloud']};
+const branding={schemaVersion:1,descriptor:'Energy markets. Managed data services. Technology.',relationship:'Home of',arkWebsite:'https://www.ark-energy.eu/en',arkWebsiteLabel:'ark-energy.eu',artesianWebsite:'https://www.artesian.cloud/',artesianWebsiteLabel:'artesian.cloud',artesianWordmark:true,showOfficeLocation:true,includeMobilePhone:false,maxPhoneNumbers:2,compactReplies:true,approvedSenderDomains:['ark-energy.eu','artesian.cloud']};
 const bundle={enabled:true,branding,revision:'test123',assets:{ark:{filename:'ark-test.png',base64:'eA=='},artesian:{filename:'artesian-test.png',base64:'eA=='}},templates:{full:await readFile(new URL('../templates/full.html',import.meta.url),'utf8'),reply:await readFile(new URL('../templates/reply.html',import.meta.url),'utf8')}};
 const graph={displayName:'Alex Example',mail:'alex@ark-energy.eu',userPrincipalName:'alex@ark-energy.eu',jobTitle:'Director',businessPhones:['+353 83 111 2222'],mobilePhone:'+39 333 111 2222',officeLocation:'Dublin'};
 const sender={displayName:'Alex Example',emailAddress:'alex@ark-energy.eu'};
@@ -66,7 +66,8 @@ test('repeated insertion reuses existing managed inline images',async()=>{
 test('replies and forwards use the compact co-branded signature',async()=>{
   for(const composeType of ['reply','forward']) {
     const {item,state}=fakeItem({composeType});await applySignature({item,bundle,getGraph:async()=>graph});
-    assert.equal(state.attachments.length,0);assert.ok(state.sets[0].html.includes('Home of Artesian'));
+    assert.equal(state.attachments.length,0);assert.ok(state.sets[0].html.includes('Home of'));
+    assert.ok(state.sets[0].html.includes('href="https://www.artesian.cloud/"'));
   }
 });
 test('plain text email stays plain text and needs no attachments',async()=>{
@@ -106,4 +107,35 @@ test('unconfirmed Artesian destination is omitted, and invalid links fail closed
   const p=profileForSender(graph,sender,branding);
   assert.ok(!renderSignature(bundle,p).includes('href=""'));
   assert.throws(()=>renderSignature({...bundle,branding:{...branding,artesianWebsite:'javascript:alert(1)'}},p));
+});
+
+test('one ARK logo accompanies linked Artesian text in the shared signature',()=>{
+  const p=profileForSender(graph,sender,branding);
+  const textBundle={...bundle,branding:{...branding,artesianWordmark:false}};
+  const html=renderSignature(textBundle,p);
+  assert.equal((html.match(/<img /g)||[]).length,1);
+  assert.ok(html.includes('alt="ARK"'));
+  assert.ok(html.includes('href="https://www.artesian.cloud/"'));
+  assert.ok(!html.includes('cid:artesian-test.png'));
+  const withoutLink=renderSignature({...bundle,branding:{...branding,artesianWebsite:'',artesianWordmark:false}},p);
+  assert.ok(withoutLink.includes('Home of Artesian'));
+  assert.ok(!withoutLink.includes('href=""'));
+});
+
+test('the official small wordmark is linked in full signatures and becomes text in replies',()=>{
+  const p=profileForSender(graph,sender,branding);
+  const html=renderSignature(bundle,p);
+  assert.equal((html.match(/<img /g)||[]).length,2);
+  assert.ok(html.includes('cid:artesian-test.png'));
+  assert.ok(html.includes('width="62" height="18"'));
+  assert.ok(!renderSignature(bundle,p,{compact:true}).includes('<img'));
+});
+
+test('the central country line replaces employee cities in HTML and plain text',()=>{
+  const p=profileForSender(graph,sender,branding);
+  const countries={...bundle,branding:{...branding,locationLine:'Ireland · Italy',showOfficeLocation:false}};
+  for(const output of [renderSignature(countries,p),plainSignature(countries,p)]) {
+    assert.ok(output.includes('Ireland · Italy'));
+    assert.ok(!output.includes('Dublin'));
+  }
 });

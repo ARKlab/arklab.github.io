@@ -8,6 +8,8 @@ ARKlab must allow public Pages publication before this repository can serve the 
 
 Once allowed, open **Repository settings → Pages**, select **GitHub Actions** as the source, then run **Check and publish signatures** from the Actions tab. The workflow includes hidden files so Outlook's required `/.well-known` file is deployed. The build can pass while publication is still blocked by organisation policy.
 
+After initial publication, the organisation's restriction on creating Pages sites can be restored. GitHub states that existing published sites remain published; routine signature changes use this existing site.
+
 ## 1. Register the application in your Microsoft 365 tenant
 
 In Microsoft Entra admin center, open **App registrations → New registration**.
@@ -29,11 +31,11 @@ See [Microsoft's NAA registration guide](https://learn.microsoft.com/en-us/offic
 
 ## 2. Confirm brand and directory settings
 
-- Set the final `artesianWebsite` in `branding.json`. Until then, its link is omitted.
+- The confirmed `artesianWebsite` is `https://www.artesian.cloud/`; update it in `branding.json` if the destination changes.
 - Confirm the sending domains in `approvedSenderDomains`.
 - Check the pilot employees' display name, job title, `businessPhones`, primary `mail` and `officeLocation` in Microsoft 365. Microsoft 365 administration is the central place to change those details.
 - `mobilePhone` is excluded by default. Only enable it if that field holds an approved business contact number for all affected employees.
-- Review any approved company/legal footer requirements before general rollout; the pilot contains an office location line, not the two full office addresses.
+- The shared location line is **Ireland · Italy**. Change `locationLine` centrally if required. Directory office locations are off by default; clear `locationLine` and enable `showOfficeLocation` to use them. Review any approved company/legal footer requirements before general rollout.
 
 ## 3. Publish and verify
 
@@ -53,7 +55,7 @@ The published site contains application code, generic templates, branding and ap
 
 In **Microsoft 365 admin center → Settings → Integrated apps**, upload the custom Outlook add-in using the published `manifest.xml`, review its requested permissions, and assign it only to a small pilot group initially.
 
-The manifest uses the XML add-in format to support Mac as well as Windows and web Outlook. Its Office permission is **ReadWriteItem**: the ability to update the current message and attach the logos. The code changes only the signature slot; it never sends messages. An administrator must review the real consent screens before installation.
+The manifest uses the XML add-in format to support Mac as well as Windows and web Outlook. Its Office permission is **ReadWriteItem**: the ability to update the current message and attach the two small logo images. The code changes only the signature slot; it never sends messages. An administrator must review the real consent screens before installation.
 
 Use a pilot mailbox on each of Mac, Windows and web Outlook. In a message, open **ARK signatures**, choose **Connect Microsoft 365**, and complete any required sign-in/consent. The preview should contain the correct profile. Event code uses silent authentication; it cannot display sign-in popups itself.
 
@@ -74,4 +76,4 @@ For routine wording or branding updates, edit `branding.json` or the templates a
 
 ## Information still needed
 
-The tenant ID, application/client ID, final Artesian website URL and named pilot users must be supplied by the organisation. No administrator registration or tenant-wide deployment has been performed by this package.
+The tenant ID, application/client ID and named pilot users must be supplied by the organisation. No administrator registration or tenant-wide deployment has been performed by this package.
