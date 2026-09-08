@@ -130,3 +130,12 @@ test('the official small wordmark is linked in full signatures and becomes text 
   assert.ok(html.includes('width="62" height="18"'));
   assert.ok(!renderSignature(bundle,p,{compact:true}).includes('<img'));
 });
+
+test('the central country line replaces employee cities in HTML and plain text',()=>{
+  const p=profileForSender(graph,sender,branding);
+  const countries={...bundle,branding:{...branding,locationLine:'Ireland · Italy',showOfficeLocation:false}};
+  for(const output of [renderSignature(countries,p),plainSignature(countries,p)]) {
+    assert.ok(output.includes('Ireland · Italy'));
+    assert.ok(!output.includes('Dublin'));
+  }
+});

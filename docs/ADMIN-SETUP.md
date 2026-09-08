@@ -35,7 +35,7 @@ See [Microsoft's NAA registration guide](https://learn.microsoft.com/en-us/offic
 - Confirm the sending domains in `approvedSenderDomains`.
 - Check the pilot employees' display name, job title, `businessPhones`, primary `mail` and `officeLocation` in Microsoft 365. Microsoft 365 administration is the central place to change those details.
 - `mobilePhone` is excluded by default. Only enable it if that field holds an approved business contact number for all affected employees.
-- Review any approved company/legal footer requirements before general rollout; the pilot contains an office location line, not the two full office addresses.
+- The shared location line is **Ireland · Italy**. Change `locationLine` centrally if required. Directory office locations are off by default; clear `locationLine` and enable `showOfficeLocation` to use them. Review any approved company/legal footer requirements before general rollout.
 
 ## 3. Publish and verify
 

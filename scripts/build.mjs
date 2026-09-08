@@ -16,7 +16,7 @@ if(typeof deployment.enabled!=='boolean'||(deployment.enabled&&(!deployment.tena
 if(branding.schemaVersion!==1||!Array.isArray(branding.approvedSenderDomains)||!branding.approvedSenderDomains.length) throw new Error('Invalid branding configuration.');
 if(!Number.isInteger(branding.maxPhoneNumbers)||branding.maxPhoneNumbers<0||branding.maxPhoneNumbers>2) throw new Error('Choose zero, one or two phone numbers.');
 for(const key of ['includeMobilePhone','showOfficeLocation','compactReplies','artesianWordmark']) if(typeof branding[key]!=='boolean') throw new Error('Invalid '+key);
-for(const key of ['descriptor','relationship','arkWebsiteLabel','artesianWebsiteLabel']) if(typeof branding[key]!=='string'||branding[key].length>150) throw new Error('Invalid '+key);
+for(const key of ['descriptor','relationship','arkWebsiteLabel','artesianWebsiteLabel','locationLine']) if(typeof branding[key]!=='string'||branding[key].length>150) throw new Error('Invalid '+key);
 if(branding.approvedSenderDomains.some(d=>typeof d!=='string'||!/^([a-z0-9-]+\.)+[a-z]{2,}$/i.test(d))) throw new Error('Invalid sending domain.');
 httpsUrl(branding.arkWebsite);httpsUrl(branding.artesianWebsite,true);
 const templates={full:await readFile('templates/full.html','utf8'),reply:await readFile('templates/reply.html','utf8')};

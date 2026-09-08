@@ -22,7 +22,8 @@ Employee data and credentials are not stored in this repository. The add-in read
 | Descriptor, “Home of”, website links, phone/location preferences | `branding.json` |
 | Layout | `templates/full.html` and `templates/reply.html` |
 | Logos | `public/assets/ark-logo.png` and `public/assets/artesian-wordmark-color.png` |
-| Employee name, job title, business phone, office | Microsoft 365 / Entra user profile |
+| Employee name, job title, business phone | Microsoft 365 / Entra user profile |
+| Shared country line (Ireland · Italy) | `locationLine` in `branding.json` |
 | Pause or resume automatic insertion | `enabled` in `deployment.json` |
 
 Save a reviewed change to `main`; the workflow runs tests, builds and publishes it. Future compose sessions fetch the new bundle after Pages finishes publishing. Existing drafts are not automatically rewritten; use **ARK signatures → Refresh this message**. A change does not rewrite already sent messages. Authentication, host caching and availability mean this is not an instantaneous push to every open Outlook window.
@@ -51,7 +52,7 @@ The local preview is at `http://127.0.0.1:8766`. Outlook installation uses the p
 - An alternate sending address in an approved company domain receives its Outlook display name and email, with no borrowed job title or phone number. Other domains are skipped and a notice is shown. Verify sender switching before rollout.
 - If authentication or the service is unavailable, the current signature is kept and a retry notice is shown. Keep the user's existing signature as a fallback during the pilot.
 - Users can still edit a message or remove a signature. This manages the default signature; it is not a compliance enforcement system.
-- Missing fields are omitted. Directory mobile numbers are not published unless an administrator explicitly enables them in `branding.json`.
+- Missing fields are omitted. The country line is shared centrally; directory office locations are optional and off by default. Directory mobile numbers are not published unless an administrator explicitly enables them in `branding.json`.
 - The official blue-and-dark Artesian wordmark appears at text scale, on a transparent background, and links to `https://www.artesian.cloud/`. Set `artesianWordmark:false` in `branding.json` for the live-text alternative. Replies always use linked text.
 
 ## References

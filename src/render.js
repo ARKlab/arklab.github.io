@@ -64,7 +64,7 @@ export function renderSignature(bundle, profile, {compact=false, images='cid', o
     NAME:escapeHtml(profile.name), TITLE:escapeHtml(profile.title), EMAIL:escapeHtml(profile.email),
     EMAIL_HREF:escapeHtml('mailto:'+encodeURIComponent(emailAddress(profile.email)).replace('%40','@')),
     PHONES:profile.phones.map(phoneHtml).join(' <span style="color:#A5ADB1;">&nbsp;&middot;&nbsp;</span> '),
-    OFFICE:escapeHtml(profile.office), DESCRIPTOR:escapeHtml(b.descriptor), RELATIONSHIP:escapeHtml(b.relationship),
+    OFFICE:escapeHtml(b.locationLine || (b.showOfficeLocation?profile.office:'')), DESCRIPTOR:escapeHtml(b.descriptor), RELATIONSHIP:escapeHtml(b.relationship),
     ARK_URL:escapeHtml(httpsUrl(b.arkWebsite)), ARK_LABEL:escapeHtml(b.arkWebsiteLabel),
     ARTESIAN_URL:escapeHtml(httpsUrl(b.artesianWebsite,true)), ARTESIAN_LABEL:escapeHtml(b.artesianWebsiteLabel),
     ARK_LOGO:logo('ark'),
@@ -92,6 +92,7 @@ export function plainSignature(bundle, p, compact=false) {
   const lines=[p.name,p.title,p.email,...p.phones].filter(Boolean);
   if (compact) lines.push(`ARK · ${bundle.branding.relationship} Artesian`);
   else lines.push('',`ARK · ${bundle.branding.relationship} Artesian`,bundle.branding.descriptor,bundle.branding.arkWebsite,...(bundle.branding.artesianWebsite?[bundle.branding.artesianWebsite]:[]));
-  if (p.office && !compact) lines.push(p.office);
+  const location=bundle.branding.locationLine || (bundle.branding.showOfficeLocation?p.office:'');
+  if (location && !compact) lines.push(location);
   return lines.join('\n');
 }
