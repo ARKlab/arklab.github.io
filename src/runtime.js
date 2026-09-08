@@ -12,7 +12,7 @@ function notify(message) {
 }
 
 function messageFor(error) {
-  if (error.message==='SIGN_IN_REQUIRED') return 'Open ARK signatures and choose Connect Microsoft 365 to enable your signature.';
+  if (error.message==='SIGN_IN_REQUIRED') return 'Open ARK signatures and choose Continue with Microsoft 365 to allow access to your profile.';
   if (error.message==='OUTLOOK_UPDATE_REQUIRED') return 'Your Outlook needs an update to use ARK signatures. Your existing signature has been kept.';
   if (error.message==='UNAPPROVED_SENDER') return 'ARK signatures is not configured for this sending address. Check the signature before sending.';
   return 'ARK signatures could not refresh. Your existing signature has been kept; use ARK signatures to retry.';

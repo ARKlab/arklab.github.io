@@ -57,7 +57,9 @@ In **Microsoft 365 admin center → Settings → Integrated apps**, upload the c
 
 The manifest uses the XML add-in format to support Mac as well as Windows and web Outlook. Its Office permission is **ReadWriteItem**: the ability to update the current message and attach the two small logo images. The code changes only the signature slot; it never sends messages. An administrator must review the real consent screens before installation.
 
-Use a pilot mailbox on each of Mac, Windows and web Outlook. In a message, open **ARK signatures**, choose **Connect Microsoft 365**, and complete any required sign-in/consent. The preview should contain the correct profile. Event code uses silent authentication; it cannot display sign-in popups itself.
+Use a pilot mailbox on each of Mac, Windows and web Outlook. In a message, open **ARK signatures**. The panel tries Outlook SSO automatically. If Microsoft requires consent or an authentication check, choose **Continue with Microsoft 365**. The preview should contain the correct profile. Event code uses silent authentication; it cannot display sign-in popups itself.
+
+Microsoft may list the standard delegated sign-in scopes `openid`, `profile` and `offline_access` alongside `User.Read`. Organisation-wide consent authorises each employee to use the app under their own identity; it does not grant access to other employees' profiles. The code retrieves `/me`, not the directory user collection.
 
 When ready to test automatic insertion, set `enabled` to `true` and publish. The build refuses to enable the pilot without configured tenant and client IDs. The add-in only runs for users to whom it has been assigned.
 
@@ -80,4 +82,4 @@ The single-tenant **ARK central signatures** app is registered. Its identifiers 
 
 On 8 September 2026, Microsoft 365 reported **Deployment completed**. The saved assignment was verified as **Just me**, matching the agreed pilot account, with no other users or groups selected. The user explicitly approved the installation capabilities: `ReadWriteItem`, `SendReceiveData` and `ProfileAccess`.
 
-The initial Outlook web Apps menu has not yet shown the new add-in. User connection, preview and real Outlook acceptance remain pending. Automatic insertion remains paused. Employee records and the pilot user's contact details are not stored in this repository.
+The pilot user subsequently confirmed that the add-in appeared in Outlook. Automatic insertion is now enabled at the user's request, and the panel loads its preview through Outlook SSO. Live insertion and send/receive acceptance remain pending. Employee records and the pilot user's contact details are not stored in this repository.
