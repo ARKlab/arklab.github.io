@@ -4,7 +4,7 @@ One company signature, managed centrally for Mac, Windows and web Outlook.
 
 The shared design pairs ARK with “Home of” followed by a small official Artesian wordmark, linking to https://www.artesian.cloud/. The descriptor is **Energy markets. Managed data services. Technology.** New messages use the full design; replies and forwards use a compact version.
 
-**Status: single-user pilot enabled on 8 September 2026. Microsoft 365 confirms the add-in is assigned to the agreed pilot account only, and the user reports it is available in Outlook. The app uses Outlook SSO and delegated `User.Read` to retrieve the signed-in user's profile. Live insertion and send/receive acceptance testing remain pending.**
+**Status: single-user pilot enabled on 8 September 2026. The pilot user confirmed insertion and external self-test delivery. A styling correction is now included for Outlook clients that discard style blocks; the revised received appearance still needs verification. The app uses Outlook SSO and delegated `User.Read` to retrieve the signed-in user's profile. The Microsoft 365 assignment remains limited to the agreed pilot account.**
 
 ## How it works
 

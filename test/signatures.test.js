@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {profileForSender,renderSignature,plainSignature} from '../src/render.js';
+import {profileForSender,renderSignature,plainSignature,formatPhoneNumber} from '../src/render.js';
 import {applySignature,completeEvent} from '../src/office-flow.js';
 
 // Stable fixtures keep routine company configuration edits independent of test expectations.
@@ -61,7 +61,7 @@ test('signature insertion only writes the signature slot with embedded PNGs',asy
   assert.ok(state.attachments.every(a=>a.options.isInline));
   assert.ok(state.sets[0].html.includes('cid:ark-test.png'));
   assert.ok(state.sets[0].html.includes('Home of'));
-  assert.ok(!state.sets[0].html.includes(' style='));
+  assert.ok(state.sets[0].html.includes(' style='));
   assert.ok(state.sets[0].html.startsWith('<style'));
 });
 test('repeated insertion reuses existing managed inline images',async()=>{
@@ -145,4 +145,33 @@ test('the central country line replaces employee cities in HTML and plain text',
     assert.ok(output.includes('Ireland · Italy'));
     assert.ok(!output.includes('Dublin'));
   }
+});
+
+test('email formatting survives removal of either style blocks or inline styles',()=>{
+  const p=profileForSender(graph,sender,branding);
+  for(const compact of [false,true]) {
+    const html=renderSignature(bundle,p,{compact,officeCss:true});
+    const withoutStyleBlock=html.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,'');
+    assert.ok(withoutStyleBlock.includes('font-family:Arial,Helvetica,sans-serif'));
+    assert.ok(withoutStyleBlock.includes('color:#0074EA'));
+    assert.ok(withoutStyleBlock.includes('text-decoration:none'));
+    assert.ok(withoutStyleBlock.includes('<strong'));
+    assert.ok(withoutStyleBlock.includes('Alex Example'));
+    const withoutInlineStyles=html.replace(/\sstyle="[^"]*"/g,'');
+    assert.ok(withoutInlineStyles.includes('<style'));
+    assert.ok(withoutInlineStyles.includes('font-family:Arial,Helvetica,sans-serif'));
+    assert.ok(withoutInlineStyles.includes(' class="arksig_'));
+    assert.ok(html.length<30000);
+  }
+});
+
+test('mobile display spacing preserves callable numbers and leaves unfamiliar formats alone',()=>{
+  assert.equal(formatPhoneNumber('+393939946956'),'+39 393 994 6956');
+  assert.equal(formatPhoneNumber('+353831432590'),'+353 83 143 2590');
+  assert.equal(formatPhoneNumber('+44 20 7123 4567 ext 12'),'+44 20 7123 4567 ext 12');
+  const p=profileForSender({...graph,businessPhones:['+393939946956','+353831432590']},sender,branding);
+  const html=renderSignature(bundle,p);
+  assert.ok(html.includes('href="tel:+393939946956"'));
+  assert.ok(html.includes('+39&#160;393&#160;994&#160;6956'));
+  assert.ok(plainSignature(bundle,p).includes('+353 83 143 2590'));
 });

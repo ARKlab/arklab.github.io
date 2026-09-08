@@ -35,11 +35,20 @@ export function profileForSender(graph, sender, branding) {
   return {name:text(graph.displayName)||text(sender.displayName)||email, email, title:text(graph.jobTitle), office:branding.showOfficeLocation ? text(graph.officeLocation) : '', phones, directoryMatched:true};
 }
 
+export function formatPhoneNumber(phone) {
+  const compact=String(phone).replace(/[\s().-]/g,'');
+  const ireland=compact.match(/^\+353(8\d)(\d{3})(\d{4})$/);
+  if(ireland) return `+353 ${ireland[1]} ${ireland[2]} ${ireland[3]}`;
+  const italy=compact.match(/^\+39(3\d{2})(\d{3})(\d{4})$/);
+  if(italy) return `+39 ${italy[1]} ${italy[2]} ${italy[3]}`;
+  return String(phone);
+}
+
 function phoneHtml(phone) {
-  const label=escapeHtml(phone).replace(/ /g,'&#160;');
+  const label=escapeHtml(formatPhoneNumber(phone)).replace(/ /g,'&#160;');
   const compact=phone.replace(/[\s().-]/g,'');
   return /^\+[1-9]\d{6,14}$/.test(compact)
-    ? `<a href="tel:${compact}" style="font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#102326;text-decoration:none;">${label}</a>`
+    ? `<a href="tel:${compact}" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:19px;color:#34464C;text-decoration:none;"><span style="color:#34464C;text-decoration:none;">${label}</span></a>`
     : label;
 }
 
@@ -76,20 +85,20 @@ export function renderSignature(bundle, profile, {compact=false, images='cid', o
   return result;
 }
 
-// setSignatureAsync currently documents internal CSS support, not inline CSS.
-// Keep portable inline templates as source and give Outlook a scoped style block.
+// Keep matching inline and scoped internal CSS: recent Outlook for Mac drops
+// style blocks (OfficeDev/office-js#6805), while other clients use internal CSS.
 export function toOfficeCss(html, revision) {
   const styles=new Map(); const prefix='arksig_'+String(revision).replace(/[^a-z0-9]/gi,'').slice(0,16)+'_';
   const converted=html.replace(/\sstyle="([^"]*)"/g,(_,style)=>{
     if (!styles.has(style)) styles.set(style,prefix+styles.size);
-    return ` class="${styles.get(style)}"`;
+    return ` class="${styles.get(style)}" style="${style}"`;
   });
   const css=[...styles].map(([style,name])=>'.'+name+'{'+style+'}').join('\n');
   return `<style type="text/css">${css}</style>${converted}`;
 }
 
 export function plainSignature(bundle, p, compact=false) {
-  const lines=[p.name,p.title,p.email,...p.phones].filter(Boolean);
+  const lines=[p.name,p.title,p.email,...p.phones.map(formatPhoneNumber)].filter(Boolean);
   if (compact) lines.push(`ARK · ${bundle.branding.relationship} Artesian`);
   else lines.push('',`ARK · ${bundle.branding.relationship} Artesian`,bundle.branding.descriptor,bundle.branding.arkWebsite,...(bundle.branding.artesianWebsite?[bundle.branding.artesianWebsite]:[]));
   const location=bundle.branding.locationLine || (bundle.branding.showOfficeLocation?p.office:'');
