@@ -15,14 +15,14 @@ for(const key of ['clientId','tenantId']) if(deployment[key]&&!uuid.test(deploym
 if(typeof deployment.enabled!=='boolean'||(deployment.enabled&&(!deployment.tenantId||!deployment.clientId))) throw new Error('Configure Microsoft 365 before enabling the pilot.');
 if(branding.schemaVersion!==1||!Array.isArray(branding.approvedSenderDomains)||!branding.approvedSenderDomains.length) throw new Error('Invalid branding configuration.');
 if(!Number.isInteger(branding.maxPhoneNumbers)||branding.maxPhoneNumbers<0||branding.maxPhoneNumbers>2) throw new Error('Choose zero, one or two phone numbers.');
-for(const key of ['includeMobilePhone','showOfficeLocation','compactReplies']) if(typeof branding[key]!=='boolean') throw new Error('Invalid '+key);
+for(const key of ['includeMobilePhone','showOfficeLocation','compactReplies','artesianWordmark']) if(typeof branding[key]!=='boolean') throw new Error('Invalid '+key);
 for(const key of ['descriptor','relationship','arkWebsiteLabel','artesianWebsiteLabel']) if(typeof branding[key]!=='string'||branding[key].length>150) throw new Error('Invalid '+key);
 if(branding.approvedSenderDomains.some(d=>typeof d!=='string'||!/^([a-z0-9-]+\.)+[a-z]{2,}$/i.test(d))) throw new Error('Invalid sending domain.');
 httpsUrl(branding.arkWebsite);httpsUrl(branding.artesianWebsite,true);
 const templates={full:await readFile('templates/full.html','utf8'),reply:await readFile('templates/reply.html','utf8')};
 for(const template of Object.values(templates)) if(/<(script|iframe|object|embed|form|input)\b|\son[a-z]+\s*=|javascript:/i.test(template)) throw new Error('Templates must contain passive email HTML only.');
 const assets={};
-for(const [key,path] of Object.entries({ark:'public/assets/ark-logo.png'})) {
+for(const [key,path] of Object.entries({ark:'public/assets/ark-logo.png',artesian:'public/assets/artesian-wordmark-color.png'})) {
   const bytes=await readFile(path);
   if(bytes.length>100000||bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a') throw new Error('Use small PNG logo assets.');
   const hash=createHash('sha256').update(bytes).digest('hex').slice(0,12);

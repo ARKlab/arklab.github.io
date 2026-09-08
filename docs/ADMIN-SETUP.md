@@ -8,6 +8,8 @@ ARKlab must allow public Pages publication before this repository can serve the 
 
 Once allowed, open **Repository settings → Pages**, select **GitHub Actions** as the source, then run **Check and publish signatures** from the Actions tab. The workflow includes hidden files so Outlook's required `/.well-known` file is deployed. The build can pass while publication is still blocked by organisation policy.
 
+After initial publication, the organisation's restriction on creating Pages sites can be restored. GitHub states that existing published sites remain published; routine signature changes use this existing site.
+
 ## 1. Register the application in your Microsoft 365 tenant
 
 In Microsoft Entra admin center, open **App registrations → New registration**.
@@ -53,7 +55,7 @@ The published site contains application code, generic templates, branding and ap
 
 In **Microsoft 365 admin center → Settings → Integrated apps**, upload the custom Outlook add-in using the published `manifest.xml`, review its requested permissions, and assign it only to a small pilot group initially.
 
-The manifest uses the XML add-in format to support Mac as well as Windows and web Outlook. Its Office permission is **ReadWriteItem**: the ability to update the current message and attach the ARK logo. The code changes only the signature slot; it never sends messages. An administrator must review the real consent screens before installation.
+The manifest uses the XML add-in format to support Mac as well as Windows and web Outlook. Its Office permission is **ReadWriteItem**: the ability to update the current message and attach the two small logo images. The code changes only the signature slot; it never sends messages. An administrator must review the real consent screens before installation.
 
 Use a pilot mailbox on each of Mac, Windows and web Outlook. In a message, open **ARK signatures**, choose **Connect Microsoft 365**, and complete any required sign-in/consent. The preview should contain the correct profile. Event code uses silent authentication; it cannot display sign-in popups itself.
 

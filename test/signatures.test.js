@@ -5,7 +5,7 @@ import {profileForSender,renderSignature,plainSignature} from '../src/render.js'
 import {applySignature,completeEvent} from '../src/office-flow.js';
 
 // Stable fixtures keep routine company configuration edits independent of test expectations.
-const branding={schemaVersion:1,descriptor:'Energy markets. Data. Technology.',relationship:'Home of',arkWebsite:'https://www.ark-energy.eu/en',arkWebsiteLabel:'ark-energy.eu',artesianWebsite:'https://www.artesian.cloud/',artesianWebsiteLabel:'artesian.cloud',showOfficeLocation:true,includeMobilePhone:false,maxPhoneNumbers:2,compactReplies:true,approvedSenderDomains:['ark-energy.eu','artesian.cloud']};
+const branding={schemaVersion:1,descriptor:'Energy markets. Managed data services. Technology.',relationship:'Home of',arkWebsite:'https://www.ark-energy.eu/en',arkWebsiteLabel:'ark-energy.eu',artesianWebsite:'https://www.artesian.cloud/',artesianWebsiteLabel:'artesian.cloud',artesianWordmark:true,showOfficeLocation:true,includeMobilePhone:false,maxPhoneNumbers:2,compactReplies:true,approvedSenderDomains:['ark-energy.eu','artesian.cloud']};
 const bundle={enabled:true,branding,revision:'test123',assets:{ark:{filename:'ark-test.png',base64:'eA=='},artesian:{filename:'artesian-test.png',base64:'eA=='}},templates:{full:await readFile(new URL('../templates/full.html',import.meta.url),'utf8'),reply:await readFile(new URL('../templates/reply.html',import.meta.url),'utf8')}};
 const graph={displayName:'Alex Example',mail:'alex@ark-energy.eu',userPrincipalName:'alex@ark-energy.eu',jobTitle:'Director',businessPhones:['+353 83 111 2222'],mobilePhone:'+39 333 111 2222',officeLocation:'Dublin'};
 const sender={displayName:'Alex Example',emailAddress:'alex@ark-energy.eu'};
@@ -50,7 +50,7 @@ test('mailbox display names cannot smuggle mailto headers',()=>{
 test('signature insertion only writes the signature slot with embedded PNGs',async()=>{
   const {item,state}=fakeItem();
   const result=await applySignature({item,bundle,getGraph:async()=>graph});
-  assert.equal(result.status,'applied');assert.equal(state.sets.length,1);assert.equal(state.attachments.length,1);
+  assert.equal(result.status,'applied');assert.equal(state.sets.length,1);assert.equal(state.attachments.length,2);
   assert.ok(state.attachments.every(a=>a.options.isInline));
   assert.ok(state.sets[0].html.includes('cid:ark-test.png'));
   assert.ok(state.sets[0].html.includes('Home of'));
@@ -111,12 +111,22 @@ test('unconfirmed Artesian destination is omitted, and invalid links fail closed
 
 test('one ARK logo accompanies linked Artesian text in the shared signature',()=>{
   const p=profileForSender(graph,sender,branding);
-  const html=renderSignature(bundle,p);
+  const textBundle={...bundle,branding:{...branding,artesianWordmark:false}};
+  const html=renderSignature(textBundle,p);
   assert.equal((html.match(/<img /g)||[]).length,1);
   assert.ok(html.includes('alt="ARK"'));
   assert.ok(html.includes('href="https://www.artesian.cloud/"'));
   assert.ok(!html.includes('cid:artesian-test.png'));
-  const withoutLink=renderSignature({...bundle,branding:{...branding,artesianWebsite:''}},p);
+  const withoutLink=renderSignature({...bundle,branding:{...branding,artesianWebsite:'',artesianWordmark:false}},p);
   assert.ok(withoutLink.includes('Home of Artesian'));
   assert.ok(!withoutLink.includes('href=""'));
+});
+
+test('the official small wordmark is linked in full signatures and becomes text in replies',()=>{
+  const p=profileForSender(graph,sender,branding);
+  const html=renderSignature(bundle,p);
+  assert.equal((html.match(/<img /g)||[]).length,2);
+  assert.ok(html.includes('cid:artesian-test.png'));
+  assert.ok(html.includes('width="62" height="18"'));
+  assert.ok(!renderSignature(bundle,p,{compact:true}).includes('<img'));
 });

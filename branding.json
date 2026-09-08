@@ -1,11 +1,12 @@
 {
   "schemaVersion": 1,
-  "descriptor": "Energy markets. Data. Technology.",
+  "descriptor": "Energy markets. Managed data services. Technology.",
   "relationship": "Home of",
   "arkWebsite": "https://www.ark-energy.eu/en",
   "arkWebsiteLabel": "ark-energy.eu",
   "artesianWebsite": "https://www.artesian.cloud/",
   "artesianWebsiteLabel": "artesian.cloud",
+  "artesianWordmark": true,
   "showOfficeLocation": true,
   "includeMobilePhone": false,
   "maxPhoneNumbers": 2,

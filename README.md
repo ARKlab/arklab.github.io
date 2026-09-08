@@ -2,7 +2,7 @@
 
 One company signature, managed centrally for Mac, Windows and web Outlook.
 
-The shared design pairs ARK with the text “Home of Artesian”, linking to https://www.artesian.cloud/. The descriptor is **Energy markets. Data. Technology.** New messages use the full design; replies and forwards use a compact version.
+The shared design pairs ARK with “Home of” followed by a small official Artesian wordmark, linking to https://www.artesian.cloud/. The descriptor is **Energy markets. Managed data services. Technology.** New messages use the full design; replies and forwards use a compact version.
 
 **Status: pilot implementation. Microsoft 365 registration, consent and Outlook acceptance testing are still required. Automatic insertion is paused by default.**
 
@@ -11,7 +11,7 @@ The shared design pairs ARK with the text “Home of Artesian”, linking to htt
 1. GitHub holds the shared wording, links, HTML templates and logo PNGs.
 2. GitHub Pages publishes a preview, the add-in and a versioned signature bundle.
 3. When a new message, reply or forward is opened, the add-in checks the published bundle and reads the signed-in user's profile directly from Microsoft Graph.
-4. It inserts the current signature and embeds the ARK logo in that email. Sent messages retain their original artwork.
+4. It inserts the current signature and embeds the ARK logo and small Artesian wordmark in that email. Sent messages retain their original artwork.
 
 Employee data and credentials are not stored in this repository. The add-in reads only the signed-in user's profile using delegated `User.Read`. The Outlook manifest requests `ReadWriteItem`, to insert a signature and an inline logo attachment in the current message. The application does not call APIs to send messages or read mail contents.
 
@@ -21,7 +21,7 @@ Employee data and credentials are not stored in this repository. The add-in read
 |---|---|
 | Descriptor, “Home of”, website links, phone/location preferences | `branding.json` |
 | Layout | `templates/full.html` and `templates/reply.html` |
-| Logos | `public/assets/ark-logo.png` |
+| Logos | `public/assets/ark-logo.png` and `public/assets/artesian-wordmark-color.png` |
 | Employee name, job title, business phone, office | Microsoft 365 / Entra user profile |
 | Pause or resume automatic insertion | `enabled` in `deployment.json` |
 
@@ -52,7 +52,7 @@ The local preview is at `http://127.0.0.1:8766`. Outlook installation uses the p
 - If authentication or the service is unavailable, the current signature is kept and a retry notice is shown. Keep the user's existing signature as a fallback during the pilot.
 - Users can still edit a message or remove a signature. This manages the default signature; it is not a compliance enforcement system.
 - Missing fields are omitted. Directory mobile numbers are not published unless an administrator explicitly enables them in `branding.json`.
-- “Artesian” is live text linked to `https://www.artesian.cloud/`. The signature uses one ARK logo.
+- The official blue-and-dark Artesian wordmark appears at text scale, on a transparent background, and links to `https://www.artesian.cloud/`. Set `artesianWordmark:false` in `branding.json` for the live-text alternative. Replies always use linked text.
 
 ## References
 
