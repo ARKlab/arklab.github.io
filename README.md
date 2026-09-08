@@ -1,0 +1,66 @@
+# ARK signatures · Home of Artesian
+
+One company signature, managed centrally for Mac, Windows and web Outlook.
+
+The shared design pairs ARK with “Home of” above the Artesian wordmark. The descriptor is **Energy markets. Data. Technology.** New messages use the full design; replies and forwards use a compact version.
+
+**Status: pilot implementation. Microsoft 365 registration, consent and Outlook acceptance testing are still required. Automatic insertion is paused by default.**
+
+## How it works
+
+1. GitHub holds the shared wording, links, HTML templates and logo PNGs.
+2. GitHub Pages publishes a preview, the add-in and a versioned signature bundle.
+3. When a new message, reply or forward is opened, the add-in checks the published bundle and reads the signed-in user's profile directly from Microsoft Graph.
+4. It inserts the current signature and embeds the logos in that email. Sent messages retain their original artwork.
+
+Employee data and credentials are not stored in this repository. The add-in reads only the signed-in user's profile using delegated `User.Read`. The Outlook manifest requests `ReadWriteItem`, to insert a signature and inline logo attachments in the current message. The application does not call APIs to send messages or read mail contents.
+
+## Routine central changes
+
+| Change | Where to edit |
+|---|---|
+| Descriptor, “Home of”, website links, phone/location preferences | `branding.json` |
+| Layout | `templates/full.html` and `templates/reply.html` |
+| Logos | `public/assets/ark-logo.png` and `public/assets/artesian-wordmark-on-dark.png` |
+| Employee name, job title, business phone, office | Microsoft 365 / Entra user profile |
+| Pause or resume automatic insertion | `enabled` in `deployment.json` |
+
+Save a reviewed change to `main`; the workflow runs tests, builds and publishes it. Future compose sessions fetch the new bundle after Pages finishes publishing. Existing drafts are not automatically rewritten; use **ARK signatures → Refresh this message**. A change does not rewrite already sent messages. Authentication, host caching and availability mean this is not an instantaneous push to every open Outlook window.
+
+## Start the pilot
+
+Follow [Administrator setup](docs/ADMIN-SETUP.md), then complete [Outlook acceptance checks](docs/ACCEPTANCE.md).
+
+The repository name `ARKlab/arklab.github.io` serves the add-in at the origin root, so Outlook can find `/.well-known/microsoft-officeaddins-allowed.json`. Using a project subfolder would require an additional root-site setup. There was no existing ARKlab Pages repository found when preparing this project.
+
+## Local checks
+
+```sh
+npm ci
+npm test
+npm run build
+npm run serve
+```
+
+The local preview is at `http://127.0.0.1:8766`. Outlook installation uses the published HTTPS site. `npm run validate:manifest` validates the built manifest; `npm run check:deployment` checks the published resources.
+
+## Boundaries of the pilot
+
+- Supported targets are current Microsoft 365 Outlook on Mac, Windows (new and classic) and the web. The manifest uses Mailbox 1.13 and the code checks NestedAppAuth 1.1. Older clients need updating.
+- Mobile, Apple Mail, shared mailbox deployment and centrally enforced signatures at the mail server are outside this pilot.
+- An alternate sending address in an approved company domain receives its Outlook display name and email, with no borrowed job title or phone number. Other domains are skipped and a notice is shown. Verify sender switching before rollout.
+- If authentication or the service is unavailable, the current signature is kept and a retry notice is shown. Keep the user's existing signature as a fallback during the pilot.
+- Users can still edit a message or remove a signature. This manages the default signature; it is not a compliance enforcement system.
+- Missing fields are omitted. Directory mobile numbers are not published unless an administrator explicitly enables them in `branding.json`.
+- `artesianWebsite` remains empty until its final destination is confirmed. The brand wordmark appears; the unconfirmed website link is omitted.
+
+## References
+
+- [Microsoft: Outlook signature example](https://learn.microsoft.com/en-us/samples/officedev/office-add-in-samples/outlook-add-in-set-signature/)
+- [Microsoft: NAA in Outlook events](https://learn.microsoft.com/en-us/samples/officedev/office-add-in-samples/outlook-event-sso-naa/)
+- [Microsoft: supported NAA clients](https://learn.microsoft.com/en-us/javascript/api/requirement-sets/common/nested-app-auth-requirement-sets)
+- [Microsoft: setSignatureAsync, including CSS constraints](https://learn.microsoft.com/en-us/javascript/api/outlook/office.body)
+- [Microsoft: signed-in user profile and permissions](https://learn.microsoft.com/en-us/graph/api/user-get)
+- [Microsoft: centrally deploy add-ins](https://learn.microsoft.com/en-us/microsoft-365/admin/manage/centralized-deployment-of-add-ins)
+
+The manual email templates use inline formatting. For `setSignatureAsync`, the renderer converts that formatting to scoped internal CSS, following the current API documentation. Actual send/receive rendering across the pilot clients must be verified.

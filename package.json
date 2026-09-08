@@ -1,0 +1,16 @@
+{
+  "name": "ark-central-signatures",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "build": "node scripts/build.mjs",
+    "check:deployment": "node scripts/check-deployment.mjs",
+    "validate:manifest": "office-addin-manifest validate dist/manifest.xml",
+    "serve": "node scripts/serve.mjs"
+  },
+  "dependencies": { "@azure/msal-browser": "5.21.0" },
+  "devDependencies": { "esbuild": "0.28.2", "office-addin-manifest": "2.1.6" },
+  "engines": { "node": ">=22" }
+}

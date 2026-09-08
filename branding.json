@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "descriptor": "Energy markets. Data. Technology.",
+  "relationship": "Home of",
+  "arkWebsite": "https://www.ark-energy.eu/en",
+  "arkWebsiteLabel": "ark-energy.eu",
+  "artesianWebsite": "",
+  "artesianWebsiteLabel": "artesian.cloud",
+  "showOfficeLocation": true,
+  "includeMobilePhone": false,
+  "maxPhoneNumbers": 2,
+  "compactReplies": true,
+  "approvedSenderDomains": ["ark-energy.eu", "artesian.cloud"]
+}
