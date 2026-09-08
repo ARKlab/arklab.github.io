@@ -10,7 +10,17 @@
     "validate:manifest": "office-addin-manifest validate dist/manifest.xml",
     "serve": "node scripts/serve.mjs"
   },
-  "dependencies": { "@azure/msal-browser": "5.21.0" },
-  "devDependencies": { "esbuild": "0.28.2", "office-addin-manifest": "2.1.6" },
-  "engines": { "node": ">=22" }
+  "dependencies": {
+    "@azure/msal-browser": "5.21.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "office-addin-manifest": "2.1.6"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "overrides": {
+    "adm-zip": "0.6.0"
+  }
 }
