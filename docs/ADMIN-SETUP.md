@@ -1,6 +1,6 @@
 # Administrator setup
 
-This is a reviewable pilot package. Publishing GitHub Pages does not register or install the Microsoft 365 add-in.
+This is the v1.0.0 release package, with a limited Microsoft 365 pilot rollout. Publishing GitHub Pages or creating a GitHub release does not register, install or assign the Microsoft 365 add-in.
 
 ## Hosting prerequisite
 
@@ -34,7 +34,7 @@ See [Microsoft's NAA registration guide](https://learn.microsoft.com/en-us/offic
 - The confirmed `artesianWebsite` is `https://www.artesian.cloud/`; update it in `branding.json` if the destination changes.
 - Confirm the sending domains in `approvedSenderDomains`.
 - Check the pilot employees' display name, job title, `businessPhones`, primary `mail` and `officeLocation` in Microsoft 365. Microsoft 365 administration is the central place to change those details.
-- `mobilePhone` is enabled for the single-user pilot, whose contact numbers have been approved. Before expanding the assignment, confirm that this field holds an approved business contact number for every affected employee, or set `includeMobilePhone:false`. Numbers appear without office/mobile labels.
+- `mobilePhone` is enabled for the pilot. Before expanding the assignment, confirm that this field holds an approved business contact number for every affected employee, or is blank; otherwise set `includeMobilePhone:false`. Numbers appear without office/mobile labels. The directory profile's Business phone field is sufficient when Mobile phone is blank.
 - The shared location line is **Ireland · Italy**. Change `locationLine` centrally if required. Directory office locations are off by default; clear `locationLine` and enable `showOfficeLocation` to use them. Review any approved company/legal footer requirements before general rollout.
 
 ## 3. Publish and verify
@@ -67,6 +67,10 @@ When ready to test automatic insertion, set `enabled` to `true` and publish. The
 
 Complete [ACCEPTANCE.md](ACCEPTANCE.md) with real send/receive tests. After the pilot is accepted, expand the deployment group. Keep a documented local signature fallback until availability and client coverage are established. The Microsoft 365 deployment confirmation advises allowing up to 72 hours for the add-in to appear and says users may need to relaunch Microsoft 365.
 
+To add another pilot user to the existing installation, open **Integrated apps → ARK signatures → Users**, choose **Specific users or groups**, retain the current pilot users, add the new account, and save **Update**. Verify the saved list before announcing availability. Do not upload another copy of the same add-in. Keep named pilot membership in an internal record rather than this public repository.
+
+Employees do not need to install the add-in or copy HTML themselves. With the assignment delivered, a supported Outlook client, `enabled:true`, and a usable Microsoft 365 session, compose events insert signatures automatically. If silent authentication cannot complete, the employee must open **ARK signatures → Continue with Microsoft 365** once to complete Microsoft's required check; background events cannot show a sign-in prompt. The panel should then show their own profile. **Refresh this message** updates an existing draft; new events use the central template. Verify any existing personal signature does not create duplicates during each pilot user's first test.
+
 For routine wording or branding updates, edit `branding.json` or the templates and publish. Administrator reinstall is normally unnecessary for content changes. Manifest changes — new URLs, IDs, permissions, events or requirements — need a manifest version bump and an administrator-managed update.
 
 ## Pause and rollback
@@ -82,4 +86,4 @@ The single-tenant **ARK central signatures** app is registered. Its identifiers 
 
 On 8 September 2026, Microsoft 365 reported **Deployment completed**. The saved assignment was verified as **Just me**, matching the agreed pilot account, with no other users or groups selected. The user explicitly approved the installation capabilities: `ReadWriteItem`, `SendReceiveData` and `ProfileAccess`.
 
-The pilot user subsequently confirmed that the add-in appeared in Outlook, inserted a signature, and delivered an external self-test message. Automatic insertion is enabled, and the panel loads its preview through Outlook SSO. The received screenshot showed lost styling, so the renderer now retains both inline and internal CSS and uses a more compact layout. The revised received appearance and remaining client scenarios still require acceptance checks. Employee records and the pilot user's contact details are not stored in this repository.
+The first pilot user subsequently confirmed that the add-in appeared in Outlook, inserted a signature, and delivered external self-test messages. Automatic insertion is enabled, and the panel loads its preview through Outlook SSO. After the inline/internal CSS correction, the user approved both the full new-message signature and the compact forward signature as received. These designs form the v1.0.0 baseline. On 8 September 2026, the existing assignment was expanded to a second agreed pilot account; Microsoft 365 confirmed the update and the saved list was verified to contain exactly the two agreed users. The second user's client availability and remaining scenarios continue through the acceptance checklist. Employee records and pilot contact details are not stored in this repository.

@@ -4,7 +4,7 @@ One company signature, managed centrally for Mac, Windows and web Outlook.
 
 The shared design pairs ARK with “Home of” followed by a small official Artesian wordmark, linking to https://www.artesian.cloud/. The descriptor is **Energy markets. Managed data services. Technology.** New messages use the full design; replies and forwards use a compact version.
 
-**Status: single-user pilot enabled on 8 September 2026. The pilot user confirmed insertion and external self-test delivery. A styling correction is now included for Outlook clients that discard style blocks; the revised received appearance still needs verification. The app uses Outlook SSO and delegated `User.Read` to retrieve the signed-in user's profile. The Microsoft 365 assignment remains limited to the agreed pilot account.**
+**v1.0.0 — first official release, 8 September 2026.** The approved full signature and compact forward signature have passed external received-email visual checks. The app uses Outlook SSO and delegated `User.Read` to retrieve the signed-in user's profile. Rollout remains limited to the agreed pilot accounts while additional users and Outlook clients are verified; this release does not assign the add-in to the whole organisation.
 
 ## How it works
 
@@ -31,6 +31,8 @@ Save a reviewed change to `main`; the workflow runs tests, builds and publishes 
 ## Start the pilot
 
 Follow [Administrator setup](docs/ADMIN-SETUP.md), then complete [Outlook acceptance checks](docs/ACCEPTANCE.md).
+
+Download versioned packages from [GitHub Releases](https://github.com/ARKlab/arklab.github.io/releases). [CHANGELOG.md](CHANGELOG.md) records the release baseline. GitHub Pages continues to publish approved changes from `main`; a release tag is a fixed reference for review and rollback.
 
 The repository name `ARKlab/arklab.github.io` serves the add-in at the origin root, so Outlook can find `/.well-known/microsoft-officeaddins-allowed.json`. Using a project subfolder would require an additional root-site setup. There was no existing ARKlab Pages repository found when preparing this project.
 
@@ -64,4 +66,4 @@ The local preview is at `http://127.0.0.1:8766`. Outlook installation uses the p
 - [Microsoft: signed-in user profile and permissions](https://learn.microsoft.com/en-us/graph/api/user-get)
 - [Microsoft: centrally deploy add-ins](https://learn.microsoft.com/en-us/microsoft-365/admin/manage/centralized-deployment-of-add-ins)
 
-The manual email templates use inline formatting. For `setSignatureAsync`, the renderer converts that formatting to scoped internal CSS, following the current API documentation. Actual send/receive rendering across the pilot clients must be verified.
+The renderer retains matching inline formatting and scoped internal CSS so the signature remains styled when an Outlook client discards one form. The approved full and compact forward designs have been checked in received emails; the remaining client scenarios are tracked in the acceptance checklist.
