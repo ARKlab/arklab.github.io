@@ -2,6 +2,12 @@
 
 This is a reviewable pilot package. Publishing GitHub Pages does not register or install the Microsoft 365 add-in.
 
+## Hosting prerequisite
+
+ARKlab must allow public Pages publication before this repository can serve the add-in. An organisation owner controls this under **Organisation settings → Member privileges → Pages creation → Public**. This is an organisation-wide policy, not a setting limited to the signature repository; obtain the owner's approval before changing it. See [GitHub's instructions](https://docs.github.com/en/organizations/managing-organization-settings/managing-the-publication-of-github-pages-sites-for-your-organization).
+
+Once allowed, open **Repository settings → Pages**, select **GitHub Actions** as the source, then run **Check and publish signatures** from the Actions tab. The workflow includes hidden files so Outlook's required `/.well-known` file is deployed. The build can pass while publication is still blocked by organisation policy.
+
 ## 1. Register the application in your Microsoft 365 tenant
 
 In Microsoft Entra admin center, open **App registrations → New registration**.
