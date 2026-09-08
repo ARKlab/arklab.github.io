@@ -153,7 +153,7 @@ test('email formatting survives removal of either style blocks or inline styles'
     const html=renderSignature(bundle,p,{compact,officeCss:true});
     const withoutStyleBlock=html.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,'');
     assert.ok(withoutStyleBlock.includes('font-family:Arial,Helvetica,sans-serif'));
-    assert.ok(withoutStyleBlock.includes('color:#0074EA'));
+    assert.ok(withoutStyleBlock.includes(compact?'color:#0074EA':'color:#102326'));
     assert.ok(withoutStyleBlock.includes('text-decoration:none'));
     assert.ok(withoutStyleBlock.includes('<strong'));
     assert.ok(withoutStyleBlock.includes('Alex Example'));
