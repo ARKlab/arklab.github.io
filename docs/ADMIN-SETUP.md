@@ -34,7 +34,7 @@ See [Microsoft's NAA registration guide](https://learn.microsoft.com/en-us/offic
 - The confirmed `artesianWebsite` is `https://www.artesian.cloud/`; update it in `branding.json` if the destination changes.
 - Confirm the sending domains in `approvedSenderDomains`.
 - Check the pilot employees' display name, job title, `businessPhones`, primary `mail` and `officeLocation` in Microsoft 365. Microsoft 365 administration is the central place to change those details.
-- `mobilePhone` is excluded by default. Only enable it if that field holds an approved business contact number for all affected employees.
+- `mobilePhone` is enabled for the single-user pilot, whose contact numbers have been approved. Before expanding the assignment, confirm that this field holds an approved business contact number for every affected employee, or set `includeMobilePhone:false`. Numbers appear without office/mobile labels.
 - The shared location line is **Ireland · Italy**. Change `locationLine` centrally if required. Directory office locations are off by default; clear `locationLine` and enable `showOfficeLocation` to use them. Review any approved company/legal footer requirements before general rollout.
 
 ## 3. Publish and verify
@@ -74,6 +74,8 @@ For routine wording or branding updates, edit `branding.json` or the templates a
 - To remove the pilot, unassign or remove the add-in in Integrated apps and restore the usual Outlook signature defaults.
 - An already open draft may contain a previously inserted signature; pausing doesn't edit existing drafts or sent emails.
 
-## Information still needed
+## Current pilot status
 
-The tenant ID, application/client ID and named pilot users must be supplied by the organisation. No administrator registration or tenant-wide deployment has been performed by this package.
+The single-tenant **ARK central signatures** app is registered. Its identifiers are configured in `deployment.json`, and its only requested Graph permission is delegated `User.Read`. No client secret is used.
+
+The add-in still needs to be assigned to the agreed single pilot user, connected in Outlook and tested. Automatic insertion remains paused. Employee records and the pilot user's contact details are not stored in this repository.

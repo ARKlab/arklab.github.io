@@ -9,7 +9,7 @@
   "artesianWordmark": true,
   "locationLine": "Ireland · Italy",
   "showOfficeLocation": false,
-  "includeMobilePhone": false,
+  "includeMobilePhone": true,
   "maxPhoneNumbers": 2,
   "compactReplies": true,
   "approvedSenderDomains": ["ark-energy.eu", "artesian.cloud"]
