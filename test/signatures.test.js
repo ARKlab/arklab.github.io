@@ -151,7 +151,12 @@ test('email formatting survives removal of either style blocks or inline styles'
   const p=profileForSender(graph,sender,branding);
   for(const compact of [false,true]) {
     const html=renderSignature(bundle,p,{compact,officeCss:true});
-    const withoutStyleBlock=html.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,'');
+    // The renderer prepends one stylesheet. Remove that known prefix to
+    // simulate delivery behaviour; this fixture operation is not a sanitizer.
+    assert.ok(html.startsWith('<style type="text/css">'));
+    const styleEnd=html.indexOf('</style>');
+    assert.ok(styleEnd>0);
+    const withoutStyleBlock=html.slice(styleEnd+'</style>'.length);
     assert.ok(withoutStyleBlock.includes('font-family:Arial,Helvetica,sans-serif'));
     assert.ok(withoutStyleBlock.includes(compact?'color:#0074EA':'color:#102326'));
     assert.ok(withoutStyleBlock.includes('text-decoration:none'));
