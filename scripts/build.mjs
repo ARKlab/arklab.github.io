@@ -22,7 +22,7 @@ httpsUrl(branding.arkWebsite);httpsUrl(branding.artesianWebsite,true);
 const templates={full:await readFile('templates/full.html','utf8'),reply:await readFile('templates/reply.html','utf8')};
 for(const template of Object.values(templates)) if(/<(script|iframe|object|embed|form|input)\b|\son[a-z]+\s*=|javascript:/i.test(template)) throw new Error('Templates must contain passive email HTML only.');
 const assets={};
-for(const [key,path] of Object.entries({ark:'public/assets/ark-logo.png',artesian:'public/assets/artesian-wordmark-on-dark.png'})) {
+for(const [key,path] of Object.entries({ark:'public/assets/ark-logo.png'})) {
   const bytes=await readFile(path);
   if(bytes.length>100000||bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a') throw new Error('Use small PNG logo assets.');
   const hash=createHash('sha256').update(bytes).digest('hex').slice(0,12);

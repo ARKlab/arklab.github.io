@@ -55,6 +55,7 @@ export function fillTemplate(template, values) {
 
 export function renderSignature(bundle, profile, {compact=false, images='cid', officeCss=false}={}) {
   const b=bundle.branding;
+  const artesianUrl=httpsUrl(b.artesianWebsite,true);
   const logo = key => images==='preview' ? `data:image/png;base64,${bundle.assets[key].base64}` : `cid:${bundle.assets[key].filename}`;
   const values={
     NAME:escapeHtml(profile.name), TITLE:escapeHtml(profile.title), EMAIL:escapeHtml(profile.email),
@@ -63,7 +64,8 @@ export function renderSignature(bundle, profile, {compact=false, images='cid', o
     OFFICE:escapeHtml(profile.office), DESCRIPTOR:escapeHtml(b.descriptor), RELATIONSHIP:escapeHtml(b.relationship),
     ARK_URL:escapeHtml(httpsUrl(b.arkWebsite)), ARK_LABEL:escapeHtml(b.arkWebsiteLabel),
     ARTESIAN_URL:escapeHtml(httpsUrl(b.artesianWebsite,true)), ARTESIAN_LABEL:escapeHtml(b.artesianWebsiteLabel),
-    ARK_LOGO:logo('ark'), ARTESIAN_LOGO:logo('artesian')
+    ARK_LOGO:logo('ark'),
+    ARTESIAN_LINK:artesianUrl?`<a href="${escapeHtml(artesianUrl)}" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:600;color:#006D7B;text-decoration:none;">Artesian</a>`:'Artesian'
   };
   const html=fillTemplate(compact?bundle.templates.reply:bundle.templates.full,values);
   const result=officeCss ? toOfficeCss(html,bundle.revision) : html;

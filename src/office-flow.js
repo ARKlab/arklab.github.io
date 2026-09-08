@@ -26,6 +26,7 @@ export async function applySignature({item,bundle,getGraph,context={cancelled:fa
   if (!isText && !compact) {
     existing=await officeCall(item,'getAttachmentsAsync');
     for (const asset of Object.values(bundle.assets)) {
+      if (!signature.includes('cid:'+asset.filename)) continue;
       checkActive(context);
       if (!existing.some(a=>a.name===asset.filename && a.isInline)) {
         await officeCall(item,'addFileAttachmentFromBase64Async',asset.base64,asset.filename,{isInline:true});

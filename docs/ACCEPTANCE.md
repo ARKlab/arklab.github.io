@@ -8,12 +8,12 @@ Record the client version, date, result and any screenshot for each scenario on 
 |---|---|---|
 | Admin assignment | Add-in appears only for the pilot users | Pending |
 | Connect Microsoft 365 | Sign-in succeeds for the correct tenant; name/title/business phone match the directory | Pending |
-| New HTML message | Single combined signature with both PNG logos | Pending |
+| New HTML message | One ARK logo and linked “Home of Artesian” text | Pending |
 | Reply / reply all / forward | Compact signature under the new reply, not at the bottom of quoted history | Pending |
 | New plain-text message | Readable contact details and co-brand line; no HTML or logo attachments | Pending |
-| Internal and external delivery | Both logos display; clickable email/phone links work; layout survives transport | Pending |
+| Internal and external delivery | The ARK logo displays; clickable email/phone links work; layout survives transport | Pending |
 | Sent Items | The compose-time signature is visible | Pending |
-| Narrow window and dark mode | Text remains legible, no clipping; white Artesian lettering stays visible against navy | Pending |
+| Narrow window and dark mode | Text remains legible, no clipping; the Artesian text link is legible | Pending |
 | Images blocked | Employee details remain readable; inline logo behaviour checked | Pending |
 | Missing job title, phone or location | Missing lines are omitted | Pending |
 | Repeated Refresh | Signature replaces itself; no duplicate logo attachments | Pending |
