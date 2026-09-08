@@ -62,7 +62,7 @@ export function renderSignature(bundle, profile, {compact=false, images='cid', o
     : 'Artesian';
   const values={
     NAME:escapeHtml(profile.name), TITLE:escapeHtml(profile.title), EMAIL:escapeHtml(profile.email),
-    EMAIL_HREF:escapeHtml('mailto:'+encodeURIComponent(emailAddress(profile.email)).replace('%40','@')),
+    EMAIL_HREF:escapeHtml('mailto:'+emailAddress(profile.email).split('@').map(encodeURIComponent).join('@')),
     PHONES:profile.phones.map(phoneHtml).join(' <span style="color:#A5ADB1;">&nbsp;&middot;&nbsp;</span> '),
     OFFICE:escapeHtml(b.locationLine || (b.showOfficeLocation?profile.office:'')), DESCRIPTOR:escapeHtml(b.descriptor), RELATIONSHIP:escapeHtml(b.relationship),
     ARK_URL:escapeHtml(httpsUrl(b.arkWebsite)), ARK_LABEL:escapeHtml(b.arkWebsiteLabel),

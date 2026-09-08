@@ -47,6 +47,13 @@ test('mailbox display names cannot smuggle mailto headers',()=>{
   const p=profileForSender({...graph,mail:'alex?subject=oops@ark-energy.eu'},{emailAddress:'alex?subject=oops@ark-energy.eu'},branding);
   assert.ok(renderSignature(bundle,p).includes('mailto:alex%3Fsubject%3Doops@ark-energy.eu'));
 });
+test('mailto links preserve literal percent sequences and encode URL delimiters',()=>{
+  const email='alex%40team?subject=x&bcc=y#note@ark-energy.eu';
+  const p=profileForSender({...graph,mail:email},{emailAddress:email},branding);
+  const html=renderSignature(bundle,p);
+  assert.ok(html.includes('href="mailto:alex%2540team%3Fsubject%3Dx%26bcc%3Dy%23note@ark-energy.eu"'));
+  assert.throws(()=>renderSignature(bundle,{...p,email:'alex@team@ark-energy.eu'}),/INVALID_SENDER/);
+});
 test('signature insertion only writes the signature slot with embedded PNGs',async()=>{
   const {item,state}=fakeItem();
   const result=await applySignature({item,bundle,getGraph:async()=>graph});
