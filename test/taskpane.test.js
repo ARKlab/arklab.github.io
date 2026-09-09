@@ -17,7 +17,7 @@ const compiled=await build({
 const bundle=JSON.parse(await readFile('branding.json','utf8'));
 const template=await readFile('templates/full.html','utf8');
 
-function panel({needsConsent=false,brokerFailure=false,settingsFailure=false,applyFailure=false}={}) {
+function panel({needsConsent=false,brokerFailure=false,settingsFailure=false,applyFailure=false,legacyMarkup=false}={}) {
   const elements=Object.fromEntries(['status','connect','apply','signature','support','diagnostics'].map(id=>[id,{
     disabled:true,textContent:'',innerHTML:'',handlers:{},
     addEventListener(event,handler){this.handlers[event]=handler;}
@@ -27,7 +27,7 @@ function panel({needsConsent=false,brokerFailure=false,settingsFailure=false,app
   let fetchCount=0;
   const email='alex@ark-energy.eu';
   runInNewContext(compiled.outputFiles[0].text,{
-    document:{getElementById:id=>elements[id]},
+    document:{getElementById:id=>legacyMarkup&&['support','diagnostics'].includes(id)?null:elements[id]},
     Office:{onReady:handler=>{ready=handler;},context:{mailbox:{userProfile:{emailAddress:email},item:{from:{getAsync:callback=>callback({status:'succeeded',value:{emailAddress:email}})},body:{setSignatureAsync(){assert.fail('Opening a preview must not insert a signature.');}}}}}},
     URL,fixtures:{
       fetchBundle(){if(settingsFailure&&fetchCount++===0) throw Object.assign(new Error('REQUEST_NETWORK_ERROR'),{stage:'settings'});return this.bundle;},
@@ -103,4 +103,13 @@ test('a manual refresh sign-in failure leaves insertion disabled until reconnect
   assert.equal(elements.connect.disabled,false);
   assert.equal(elements.connect.textContent,'Retry connection');
   assert.equal(elements.signature.innerHTML,'');
+});
+
+test('a cached previous HTML shell still shows errors and can recover',async()=>{
+  const {elements,ready}=panel({legacyMarkup:true,brokerFailure:true});
+  await ready();
+  assert.ok(elements.status.textContent.includes('Microsoft rejected'));
+  assert.equal(elements.connect.disabled,false);
+  await elements.connect.handlers.click();
+  assert.equal(elements.apply.disabled,false);
 });

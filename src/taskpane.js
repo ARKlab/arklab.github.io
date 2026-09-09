@@ -9,15 +9,22 @@ const connect=document.getElementById('connect');
 const apply=document.getElementById('apply');
 let bundle;
 let recover=false;
-function say(message){status.textContent=message;document.getElementById('support').hidden=true;}
+function say(message){
+  status.textContent=message;
+  // Outlook may briefly retain the previous HTML shell while loading new JS.
+  const support=document.getElementById('support');
+  if(support) support.hidden=true;
+}
 function showError(error) {
   recover=error.message.startsWith('SIGN_IN_')||error.stage==='profile';
   apply.disabled=true;
   document.getElementById('signature').innerHTML='';
   connect.textContent=['SIGN_IN_REQUIRED','SIGN_IN_CANCELLED'].includes(error.message)?'Continue with Microsoft 365':'Retry connection';
   say(errorText(error));
-  document.getElementById('diagnostics').textContent=supportDetails(error);
-  document.getElementById('support').hidden=false;
+  const diagnostics=document.getElementById('diagnostics');
+  const support=document.getElementById('support');
+  if(diagnostics) diagnostics.textContent=supportDetails(error);
+  if(support) support.hidden=false;
 }
 // Opening the panel may reuse Outlook's session, but must never launch a sign-in popup.
 Office.onReady(()=>previewSignature(false));
