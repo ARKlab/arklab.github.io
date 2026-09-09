@@ -15,6 +15,10 @@ function messageFor(error) {
   if (error.message==='SIGN_IN_REQUIRED') return 'Open ARK signatures and choose Continue with Microsoft 365 to allow access to your profile.';
   if (error.message==='OUTLOOK_UPDATE_REQUIRED') return 'Your Outlook needs an update to use ARK signatures. Your existing signature has been kept.';
   if (error.message==='UNAPPROVED_SENDER') return 'ARK signatures is not configured for this sending address. Check the signature before sending.';
+  if (error.message==='SIGN_IN_BROKER_REJECTED') return 'Microsoft rejected the Outlook sign-in (7000024). Open ARK signatures to retry; if it persists, quit and reopen Outlook.';
+  if (error.message==='SIGN_IN_TIMEOUT') return 'The Outlook sign-in timed out. Your existing signature has been kept. Open ARK signatures to retry.';
+  if (error.message==='SIGN_IN_UNAVAILABLE') return 'Outlook could not sign in to Microsoft 365. Your existing signature has been kept. Open ARK signatures to retry.';
+  if (error.message==='REQUEST_TIMEOUT') return 'ARK signatures reached its time limit. Your existing signature has been kept. Open ARK signatures to retry.';
   return 'ARK signatures could not refresh. Your existing signature has been kept; use ARK signatures to retry.';
 }
 

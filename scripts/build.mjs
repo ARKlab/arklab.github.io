@@ -3,6 +3,7 @@ import {createHash} from 'node:crypto';
 import {build} from 'esbuild';
 import {httpsUrl,renderSignature} from '../src/render.js';
 
+const {version}=JSON.parse(await readFile('package.json','utf8'));
 const deployment=JSON.parse(await readFile('deployment.json','utf8'));
 const branding=JSON.parse(await readFile('branding.json','utf8'));
 const uuid=/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
@@ -39,7 +40,7 @@ await writeFile('dist/signature-bundle.json',JSON.stringify(bundle));
 await mkdir('dist/.well-known',{recursive:true});
 await writeFile('dist/.well-known/microsoft-officeaddins-allowed.json',JSON.stringify({allowed:[new URL('runtime.js',site).href]},null,2));
 await writeFile('dist/.nojekyll','');
-await build({entryPoints:['src/runtime.js','src/taskpane.js','src/preview.js'],outdir:'dist',bundle:true,format:'iife',platform:'browser',target:'es2020',minify:true,legalComments:'eof',define:{__SITE_URL__:JSON.stringify(site.href)}});
+await build({entryPoints:['src/runtime.js','src/taskpane.js','src/preview.js'],outdir:'dist',bundle:true,format:'iife',platform:'browser',target:'es2020',minify:true,legalComments:'eof',define:{__SITE_URL__:JSON.stringify(site.href),__APP_VERSION__:JSON.stringify(version)}});
 
 const xml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 const url=file=>xml(new URL(file,site).href);
