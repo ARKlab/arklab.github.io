@@ -4,7 +4,7 @@ One company signature, managed centrally for Mac, Windows and web Outlook.
 
 The shared design pairs ARK with “Home of” followed by a small official Artesian wordmark, linking to https://www.artesian.cloud/. The descriptor is **Energy markets. Managed data services. Technology.** New messages use the full design; replies and forwards use a compact version.
 
-**v1.0.0 — first official release, 8 September 2026.** The approved full signature and compact forward signature have passed external received-email visual checks. The app uses Outlook SSO and delegated `User.Read` to retrieve the signed-in user's profile. Rollout remains limited to the agreed pilot accounts while additional users and Outlook clients are verified; this release does not assign the add-in to the whole organisation.
+**1.0 general release — v1.0.1, 9 September 2026.** The owner accepted the end of the pilot after the add-in appeared automatically for a second assigned user. This release includes the approved full and compact signatures plus sign-in recovery and diagnostic improvements. The app uses Outlook SSO and delegated `User.Read` for the signed-in user's own profile. Microsoft 365 administrators control employee assignment separately; publishing a release does not change that list. Remaining client scenarios are recorded in the acceptance checklist.
 
 ## How it works
 
@@ -28,7 +28,7 @@ Employee data and credentials are not stored in this repository. The add-in read
 
 Save a reviewed change to `main`; the workflow runs tests, builds and publishes it. Future compose sessions fetch the new bundle after Pages finishes publishing. Existing drafts are not automatically rewritten; use **ARK signatures → Refresh this message**. A change does not rewrite already sent messages. Authentication, host caching and availability mean this is not an instantaneous push to every open Outlook window.
 
-## Start the pilot
+## Deploy the release
 
 Follow [Administrator setup](docs/ADMIN-SETUP.md), then complete [Outlook acceptance checks](docs/ACCEPTANCE.md).
 
@@ -47,12 +47,12 @@ npm run serve
 
 The local preview is at `http://127.0.0.1:8766`. Outlook installation uses the published HTTPS site. `npm run validate:manifest` validates the built manifest; `npm run check:deployment` checks the published resources.
 
-## Boundaries of the pilot
+## Supported scope and limitations
 
 - Supported targets are current Microsoft 365 Outlook on Mac, Windows (new and classic) and the web. The manifest uses Mailbox 1.13 and the code checks NestedAppAuth 1.1. Older clients need updating.
-- Mobile, Apple Mail, shared mailbox deployment and centrally enforced signatures at the mail server are outside this pilot.
+- Mobile, Apple Mail, shared mailbox deployment and centrally enforced signatures at the mail server are outside this release.
 - An alternate sending address in an approved company domain receives its Outlook display name and email, with no borrowed job title or phone number. Other domains are skipped and a notice is shown. Verify sender switching before rollout.
-- If authentication or the service is unavailable, the current signature is kept and a retry notice is shown. Keep the user's existing signature as a fallback during the pilot.
+- If authentication or the service is unavailable, the current signature is kept and a retry notice is shown. Maintain a local signature fallback if service availability is important.
 - Users can still edit a message or remove a signature. This manages the default signature; it is not a compliance enforcement system.
 - Missing fields are omitted. The country line is shared centrally; directory office locations are optional and off by default. Directory mobile numbers are not published unless an administrator explicitly enables them in `branding.json`.
 - The official blue-and-dark Artesian wordmark appears at text scale, on a transparent background, and links to `https://www.artesian.cloud/`. Set `artesianWordmark:false` in `branding.json` for the live-text alternative. Replies always use linked text.

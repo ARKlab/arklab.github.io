@@ -2,7 +2,9 @@
 
 ## 1.0.1 — 9 September 2026
 
-Improve recovery and diagnosis when an installed add-in cannot refresh its Microsoft 365 profile.
+**General release of the 1.0 series.** The owner accepted the end of the pilot on 9 September 2026 after confirming automatic delivery to a second assigned user. Wider employee assignment is managed separately in Microsoft 365 and awaits review of the proposed employee list.
+
+Includes the approved v1.0.0 signature design and improved recovery and diagnosis when an installed add-in cannot refresh its Microsoft 365 profile.
 
 - Retry a Graph 401 once with a fresh access token; an explicit Retry connection after a sign-in failure also bypasses the token cache.
 - Bound silent sign-in to 15 seconds and initialization to 10 seconds. User-requested Microsoft interaction has a separate two-minute deadline. A still-pending native sign-in cannot start duplicate requests; late results cannot load a profile or insert a signature after timeout.
@@ -10,9 +12,9 @@ Improve recovery and diagnosis when an installed add-in cannot refresh its Micro
 - Distinguish Microsoft broker rejection (AADSTS7000024), sign-in timeout, settings download, profile retrieval and Outlook insertion failures. Optional support details expose only the application version, time, step, safe result code and Microsoft correlation reference.
 - Keep Retry available after an initial settings failure, disable insertion after a failed refresh, and clear the earlier compose warning after successful manual insertion.
 
-Validation: automated authentication, timeout, UI recovery, privacy, sender-isolation and signature-rendering tests pass. These simulate failure/recovery paths; they do not establish a permanent fix for native Outlook broker error 7000024. If a fresh-token retry still fails, fully quitting and reopening Outlook remains the recovery step. Microsoft interaction is still requested only after an explicit click and an interaction-required error, following [Microsoft's NAA example](https://learn.microsoft.com/en-us/office/dev/add-ins/develop/enable-nested-app-authentication-in-your-add-in).
+Validation: 41 automated authentication, timeout, UI recovery, privacy, sender-isolation and signature-rendering tests pass. These simulate failure/recovery paths; they do not establish a permanent fix for native Outlook broker error 7000024. If a fresh-token retry still fails, fully quitting and reopening Outlook remains the recovery step. Microsoft interaction is still requested only after an explicit click and an interaction-required error, following [Microsoft's NAA example](https://learn.microsoft.com/en-us/office/dev/add-ins/develop/enable-nested-app-authentication-in-your-add-in).
 
-The hosted application changes; the manifest remains `1.0.0.0`, with the same permissions and pilot assignments. No Microsoft 365 redeployment is required. The separate missing-add-in catalogue issue is not addressed by this patch.
+The hosted application changes; the manifest remains `1.0.0.0`, with the same permissions and pilot assignments. No Microsoft 365 redeployment is required. The second user’s catalogue entry subsequently appeared without another assignment change; this patch does not change Microsoft 365 catalogue delivery.
 
 ## 1.0.0 — 8 September 2026
 
