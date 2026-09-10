@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.0.2 — 10 September 2026
+
+Automatic insertion now attempts silent recovery when Outlook rejects a sign-in that can succeed on retry. Previously, these token-acquisition exceptions stopped insertion immediately, even though opening the pane and refreshing could work.
+
+- Retry a completed broker rejection (7000024) or an identified transient sign-in error once after a one-second delay, requesting a fresh token. Token-acquisition recovery and Graph 401 recovery share a two-attempt limit.
+- Keep required interaction behind an explicit click. Do not retry unknown errors, policy/consent failures, an unsuccessful popup, or a native authentication request that is still pending.
+- Extend the background event limit from 18 to 60 seconds, and limit authentication and Graph requests to the remaining budget with time reserved for profile retrieval and signature insertion. Normal successful requests incur no delay.
+- Recognize numeric Microsoft error codes and the known broker-rejection description. Preserve allowlisted sign-in/suberror codes, token-attempt count and a request correlation reference when available. Background warnings log only safe support references; pane errors show those references in Support details. No tokens or employee profiles are logged.
+
+Validation: 52 automated tests pass, including complete automatic insertion after a simulated initial broker failure, repeated rejection, cancellation, shared retry limits and diagnostic privacy. The Microsoft-side defect is not reproduced by these tests; acceptance after Outlook has been left open remains pending.
+
+The manifest remains `1.0.0.0`. This hosted-code update requires no new Microsoft 365 assignment or permissions. The approved full/compact signatures are unchanged.
+
 ## 1.0.1 — 9 September 2026
 
 **General release of the 1.0 series.** The owner accepted the end of the pilot on 9 September 2026 after confirming automatic delivery to a second assigned user. Wider employee assignment is managed separately in Microsoft 365 and awaits review of the proposed employee list.

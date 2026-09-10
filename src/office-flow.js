@@ -42,9 +42,9 @@ export async function applySignature({item,bundle,getGraph,context={cancelled:fa
   return {status:'applied',revision:bundle.revision,compact,directoryMatched:profile.directoryMatched};
 }
 
-export async function completeEvent(event,work,{timeoutMs=18000,onError=()=>{}}={}) {
+export async function completeEvent(event,work,{timeoutMs=60000,onError=()=>{}}={}) {
   let finished=false;
-  const context={cancelled:false};
+  const context={cancelled:false,deadlineAt:Date.now()+timeoutMs};
   const finish=()=>{if(!finished){finished=true;event.completed();}};
   const timer=setTimeout(()=>{context.cancelled=true;try{onError(new Error('REQUEST_TIMEOUT'));}finally{finish();}},timeoutMs);
   try { await work(context); }

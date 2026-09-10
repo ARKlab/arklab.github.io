@@ -2,7 +2,7 @@
 
 Automated checks verify rendering logic and simulated Office API behaviour. They do not certify Outlook layout, authentication or installation.
 
-On 9 September 2026, the owner accepted the transition from pilot to general release after confirming that a second assigned user received the add-in automatically. This is an operational release decision, not a claim that every client scenario below has passed. The 1.0.1 recovery patch passes 41 automated tests.
+On 9 September 2026, the owner accepted the transition from pilot to general release after confirming that a second assigned user received the add-in automatically. This is an operational release decision, not a claim that every client scenario below has passed. The 1.0.2 recovery patch passes 52 automated tests.
 
 Record the client version, date, result and any screenshot for each scenario on **Mac, Windows new/classic as used by the team, and Outlook on the web**. On 8 September 2026, the pilot user approved two received external test messages: the revised full signature and the compact signature on a forwarded message. The screenshots confirm that typography, colours, logo sizing, phone spacing and the country-only footer now survive delivery. Keep screenshots and employee details outside this public repository. These results establish the v1.0.0 design baseline; they do not certify every Outlook client or every scenario below.
 
@@ -23,7 +23,7 @@ Record the client version, date, result and any screenshot for each scenario on 
 | Existing Outlook signature | Company signature replaces the signature in the new message without duplicates; saved personal templates remain intact | Pending |
 | Switch approved sending identity | Current sender's identity; no borrowed title/phone from a different account | Pending |
 | Unapproved sending domain | Notice appears and the user checks the remaining signature | Pending |
-| Signed out / authentication expired | Existing signature remains; connection/retry guidance appears | First user reported a sign-in failure that cleared after restarting Outlook. Version 1.0.1 adds tested recovery/diagnostic handling; the original native sign-in failure has not been reproduced after the patch |
+| Signed out / authentication expired | Recoverable rejection gets one silent retry; genuine sign-in checks require a user click; unrecovered failure preserves the existing signature | On 10 September a user reported recurrence after leaving Outlook open, recovering through the pane. Version 1.0.2 tests that failure/retry path with simulated provider responses. A real Mac idle-session retest is pending |
 | Network unavailable / slow Graph | No message body overwrite, no send block, existing signature preserved | Pending |
 | Central descriptor change | A newly composed message uses the published revision without employee editing | Pending |
 | Central logo change | New messages get new embedded artwork; previous messages retain their original artwork | Pending |

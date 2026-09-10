@@ -1,3 +1,5 @@
+const msalCodes=new Set(['temporarily_unavailable','server_error','bridge_connection_reset','bridge_timeout','bridge_handshake_failed','bridge_response_invalid','no_network_connectivity','no_account_error','no_account_found','nested_app_auth_bridge_disabled','unknown_error','invalid_grant','interaction_required','login_required','consent_required','user_cancelled','timed_out','monitor_window_timeout']);
+const subCodes=new Set(['basic_action','additional_action','message_only','consent_required','user_password_expired','bad_token','token_expired','protection_policy_required']);
 // Retain only support references, never raw provider messages, tokens or profiles.
 export function signatureError(code,stage,source={}) {
   const error=new Error(code);
@@ -5,9 +7,12 @@ export function signatureError(code,stage,source={}) {
   error.at=new Date().toISOString();
   const aadsts=String(source.errorMessage||source.message||'').match(/\bAADSTS(\d{4,10})\b/);
   const numeric=Array.isArray(source.errorCodes)?source.errorCodes.find(c=>/^\d{4,10}$/.test(String(c))):undefined;
-  const providerCode=aadsts?.[1] || numeric || source.microsoftCode;
+  const singular=String(source.errorCode||'').match(/^(?:AADSTS)?(\d{4,10})$/);
+  const providerCode=aadsts?.[1] || numeric || source.microsoftCode || singular?.[1];
   if (/^\d{4,10}$/.test(String(providerCode))) error.microsoftCode=String(providerCode);
   if (/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(source.correlationId||'')) error.correlationId=source.correlationId;
+  if(msalCodes.has(source.errorCode||source.msalCode)) error.msalCode=source.errorCode||source.msalCode;
+  if(subCodes.has(source.subError)) error.subError=source.subError;
   return error;
 }
 
@@ -39,6 +44,9 @@ export function supportDetails(error) {
   if(['sign-in','settings','profile'].includes(error.stage)) lines.push('Step: '+error.stage);
   if(/^\d{4,10}$/.test(error.microsoftCode||'')) lines.push('Microsoft code: AADSTS'+error.microsoftCode);
   if(/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(error.correlationId||'')) lines.push('Correlation ID: '+error.correlationId);
+  if(msalCodes.has(error.msalCode)) lines.push('Sign-in code: '+error.msalCode);
+  if(subCodes.has(error.subError)) lines.push('Sign-in detail: '+error.subError);
+  if(error.attempts===1||error.attempts===2) lines.push('Token attempts: '+error.attempts);
   if(/^(SIGN_IN_[A-Z_]+|REQUEST_(TIMEOUT|NETWORK_ERROR|INVALID_RESPONSE|FAILED_\d{3}))$/.test(error.message)) lines.push('Result: '+error.message);
   return lines.join('\n');
 }

@@ -1,6 +1,7 @@
 import {fetchBundle} from './network.js';
 import {graphProfile} from './auth.js';
 import {applySignature,completeEvent} from './office-flow.js';
+import {supportDetails} from './errors.js';
 
 const siteUrl=__SITE_URL__;
 function notify(message) {
@@ -26,13 +27,16 @@ function onCompose(event) {
   return completeEvent(event,async context=>{
     const bundle=await fetchBundle(siteUrl);
     if (context.cancelled) return;
-    const result=await applySignature({item:Office.context.mailbox.item,bundle,context,getGraph:()=>graphProfile(bundle.deployment,{loginHint:Office.context.mailbox.userProfile.emailAddress})});
+    const result=await applySignature({item:Office.context.mailbox.item,bundle,context,getGraph:()=>graphProfile(bundle.deployment,{loginHint:Office.context.mailbox.userProfile.emailAddress,context})});
     if (context.cancelled) return;
     if(result.status==='applied') {
       Office.context.mailbox.item.notificationMessages.removeAsync('ark-signature-status',()=>{});
       if (!result.directoryMatched) notify('This sending address uses name and email only. Ask your administrator to confirm its directory details.');
     }
-  },{onError:error=>notify(messageFor(error))});
+  },{onError:error=>{
+    console.warn(supportDetails(error));
+    notify(messageFor(error));
+  }});
 }
 Office.onReady(()=>{});
 Office.actions.associate('arkOnCompose',onCompose);
