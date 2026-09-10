@@ -1,6 +1,6 @@
 # Administrator setup
 
-This is the 1.0 general release, package v1.0.1. The owner accepted the end of the pilot on 9 September 2026. Publishing GitHub Pages or creating a GitHub release does not register, install or assign the Microsoft 365 add-in.
+This is the 1.0 general release, package v1.0.2. The owner accepted the end of the pilot on 9 September 2026. Publishing GitHub Pages or creating a GitHub release does not register, install or assign the Microsoft 365 add-in.
 
 ## Hosting prerequisite
 
@@ -88,4 +88,6 @@ The installation began on 8 September 2026 and was subsequently expanded to thre
 
 The wider employee assignment is a separate administrative action. The owner requested review of the proposed employee list before it is applied. Keep employee names, contact details and assignment evidence in internal records, outside this public repository.
 
-Version 1.0.1 includes a fresh-token retry, bounded sign-in/network waits and safe support references. If **Retry connection** cannot clear a Microsoft broker sign-in rejection, fully quit and reopen Outlook. This improves recovery and diagnosis; it does not establish a permanent Microsoft-side fix. The Outlook manifest remains version `1.0.0.0`; existing users do not need a new manifest for this release.
+Version 1.0.2 retries a completed, recoverable token-acquisition failure once silently before showing the compose warning. It shares a two-attempt limit with Graph 401 recovery and allows at most 60 seconds for the overall automatic event, with shorter per-request deadlines. Background failures emit safe support references to the add-in console; pane failures expose references under **Support details**. These paths have separate runtime state, so a successful pane preview does not display the prior background exception. No tokens or employee profiles are included in those diagnostics.
+
+If **Retry connection** cannot clear a Microsoft broker sign-in rejection, fully quit and reopen Outlook. This improves recovery and diagnosis; it does not establish a permanent Microsoft-side fix. The Outlook manifest remains version `1.0.0.0`; existing users do not need a new manifest for this release. Outlook may cache hosted code in an already-open session. Close existing drafts and reopen the add-in, or restart Outlook once, to establish the new baseline before testing an extended idle session.

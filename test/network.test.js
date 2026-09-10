@@ -43,3 +43,16 @@ test('support details distinguish a broker rejection and a timeout without leaki
   assert.equal(supportDetails(broker).includes('not-a-uuid'),false);
   assert.ok(errorText(signatureError('SIGN_IN_TIMEOUT','sign-in')).includes('time limit'));
 });
+
+test('numeric and symbolic sign-in codes are retained without copying arbitrary payloads',()=>{
+  for(const source of [{errorCode:'7000024'},{errorCode:7000024},{errorCode:'AADSTS7000024'}]) {
+    assert.equal(signatureError('SIGN_IN_BROKER_REJECTED','sign-in',source).microsoftCode,'7000024');
+  }
+  const safe=signatureError('SIGN_IN_UNAVAILABLE','sign-in',{errorCode:'temporarily_unavailable',subError:'bad_token'});
+  safe.attempts=2;
+  assert.ok(supportDetails(safe).includes('Sign-in code: temporarily_unavailable'));
+  assert.ok(supportDetails(safe).includes('Token attempts: 2'));
+  const privateError=signatureError('SIGN_IN_UNAVAILABLE','sign-in',{errorCode:'private_employee_address',subError:'PRIVATE_TOKEN',message:'PRIVATE_PAYLOAD'});
+  assert.equal(supportDetails(privateError).includes('private_employee'),false);
+  assert.equal(supportDetails(privateError).includes('PRIVATE_'),false);
+});
