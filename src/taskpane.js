@@ -1,8 +1,9 @@
-import {fetchBundle} from './network.js';
+import {fetchBundle,jsonRequest} from './network.js';
 import {graphProfile,isConfigured} from './auth.js';
 import {profileForSender,renderSignature} from './render.js';
 import {applySignature,officeCall} from './office-flow.js';
 import {errorText,supportDetails} from './errors.js';
+import {installLogoPilot} from './experiments/logo-pilot.js';
 
 const status=document.getElementById('status');
 const connect=document.getElementById('connect');
@@ -27,7 +28,13 @@ function showError(error) {
   if(support) support.hidden=false;
 }
 // Opening the panel may reuse Outlook's session, but must never launch a sign-in popup.
-Office.onReady(()=>previewSignature(false));
+Office.onReady(async()=>{
+  await previewSignature(false);
+  await installLogoPilot({document,mailbox:Office.context.mailbox,
+    fetchBase:()=>fetchBundle(__SITE_URL__),getGraph:graphProfile,
+    fetchAssets:()=>jsonRequest(new URL('experiments/logo-colours/assets.json',__SITE_URL__).href,{cache:'no-store',credentials:'omit'})
+  });
+});
 async function previewSignature(interactive) {
   connect.disabled=true; apply.disabled=true;
   say('Loading your profile using your Outlook sign-in…');
