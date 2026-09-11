@@ -70,7 +70,16 @@ test('pilot render keeps normal output and compact replies unchanged',()=>{
 
 test('white images retain inline hiding when all style blocks are removed',()=>{
   const html=renderSignature(makeLogoPilotBundle(base,assets),profile,{officeCss:true});
-  const withoutStyles=html.replace(/<style\b[^>]*>[\s\S]*?<\/style>/g,'');
+  // Remove the two known leading stylesheets from this generated fixture.
+  // This models a mail-client transformation; it is not an HTML sanitizer.
+  let withoutStyles=html;
+  for(let block=0;block<2;block++) {
+    assert.ok(withoutStyles.startsWith('<style type="text/css">'));
+    const end=withoutStyles.indexOf('</style>');
+    assert.ok(end>0);
+    withoutStyles=withoutStyles.slice(end+'</style>'.length);
+  }
+  assert.equal(withoutStyles.includes('<style'),false);
   for(const tag of withoutStyles.match(/<img\b[^>]*>/g).filter(tag=>tag.includes('-white-'))) {
     assert.ok(tag.includes('display:none;'));
     assert.ok(tag.includes('width="0" height="0"'));
