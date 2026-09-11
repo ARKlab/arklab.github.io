@@ -27,9 +27,9 @@ Reference patterns: [Litmus dark-mode guide](https://www.litmus.com/blog/coding-
 
 ## Acceptance record
 
-Automated checks cover account targeting, no additional work for non-pilot users, own-sender/profile checks, HTML-only new drafts, pause handling, duplicate clicks/attachments, standard restoration and safe default hiding. Browser checks and received-mail results are recorded separately. Do not treat publication or a successful preview as cross-client email acceptance.
+Automated checks cover the configured pilot address using real Web Crypto, no additional work for non-pilot users, own-sender/profile checks, HTML-only new drafts and their rejection message, pause handling, duplicate clicks/attachments, standard restoration and safe default hiding. Synthetic profiles cover the insertion flows. Browser checks and received-mail results are recorded separately. Do not treat publication or a successful preview as cross-client email acceptance.
 
-On 11 September 2026, all 62 automated tests and Microsoft's manifest validation passed. Browser inspection of the actual rendered HTML confirmed exactly two visible logos in five cases: light and dark media-query contexts, removed style blocks, removed inline styles, and the Outlook `data-ogsc` selector. Media-query contexts were supplied through the containing iframe's `color-scheme`; no email client was simulated. Real sent/received Outlook testing is still pending.
+On 11 September 2026, all 64 automated tests and Microsoft's manifest validation passed. Browser inspection of the actual rendered HTML confirmed exactly two visible logos in five cases: light and dark media-query contexts, removed style blocks, removed inline styles, and the Outlook `data-ogsc` selector. Media-query contexts were supplied through the containing iframe's `color-scheme`; no email client was simulated. Real sent/received Outlook testing is still pending.
 
 The built automatic runtime, production signature bundle, manifest and Outlook well-known file are byte-for-byte identical to release 1.0.2. The four trial PNGs total 37,080 bytes; the rendered HTML is approximately 8 KB, below the existing 30 KB signature limit.
 

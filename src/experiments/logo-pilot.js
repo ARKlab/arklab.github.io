@@ -33,7 +33,7 @@ const messages={
   LOGO_PILOT_NOT_ASSIGNED:'This logo test is not assigned to the current account.',
   LOGO_PILOT_OWN_SENDER_ONLY:'Choose your own ARK address in From to try these logos.',
   LOGO_PILOT_PROFILE_MISMATCH:'The signed-in profile does not match this mailbox. Reconnect using your ARK account.',
-  LOGO_PILOT_NEW_HTML_ONLY:'Use a new HTML email for the logo test. Replies and forwards keep the compact signature.',
+  LOGO_PILOT_NEW_HTML_ONLY:'The logo test needs a new HTML email. Plain-text messages cannot display logos; replies and forwards keep the compact signature.',
   LOGO_PILOT_INVALID_ASSETS:'The test artwork could not be loaded. Your current signature has been kept.',
   LOGO_PILOT_TEMPLATE_CHANGED:'The company template has changed. The logo test needs an update before it can be used.',
   SENDER_CHANGED:'The sending account changed. Check From and try again.'

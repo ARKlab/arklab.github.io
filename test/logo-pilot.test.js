@@ -15,8 +15,8 @@ for(const [key,file] of Object.entries({arkFallback:'ark-fallback',arkWhite:'ark
 }
 const profile={name:'Alex Example',email,title:'Director',phones:[],office:''};
 
-// Exercise pilot targeting with a synthetic account; real employee details are
-// unnecessary in public fixtures. Production uses the browser's real SHA-256.
+// Use a synthetic profile for flow tests. A separate, unmocked test below
+// verifies that the configured pilot address matches through real Web Crypto.
 function assignFixture(t) {
   const realDigest=crypto.subtle.digest.bind(crypto.subtle);
   t.mock.method(crypto.subtle,'digest',async(algorithm,input)=>new TextDecoder().decode(input)==='ark-signature-logo-trial:'+email
@@ -37,6 +37,12 @@ function fixture({account=email,sender=email,composeType='newMail',bodyType='htm
   const input={mailbox:{userProfile:{emailAddress:account},item},fetchBase:async()=>{calls.base++;return {...base,enabled};},fetchAssets:async()=>{calls.assets++;return assets;},getGraph:async(_config,request)=>{calls.graph.push(request);return {displayName:profile.name,mail:graphEmail,userPrincipalName:graphEmail};}};
   return {calls,item,input};
 }
+
+test('configured pilot address matches using real Web Crypto',async()=>{
+  assert.equal(await isLogoPilotAccount('francesco.arci@ark-energy.eu'),true);
+  assert.equal(await isLogoPilotAccount(' Francesco.Arci@ARK-ENERGY.EU '),true);
+  assert.equal(await isLogoPilotAccount('someone-else@ark-energy.eu'),false);
+});
 
 test('pilot account comparison normalises case and rejects other accounts',async t=>{
   assignFixture(t);
@@ -157,6 +163,17 @@ test('pilot controls require a click; repeated clicks cannot create concurrent i
   assert.equal(doc.elements.connect.disabled,false);
   assert.equal(doc.elements['insert-test-logos'].disabled,false);
   assert.ok(doc.elements['logo-pilot-status'].textContent.includes('Test logos inserted'));
+});
+
+test('plain-text draft explains the restriction and restores controls without loading data',async t=>{
+  assignFixture(t);
+  const f=fixture({bodyType:'text'});const doc=panelDocument();
+  await installLogoPilot({...f.input,document:doc.document});
+  await doc.elements['insert-test-logos'].handlers.click();
+  assert.match(doc.elements['logo-pilot-status'].textContent,/Plain-text messages cannot display logos/);
+  assert.equal(f.calls.base,0);assert.equal(f.calls.assets,0);assert.equal(f.calls.graph.length,0);
+  assert.equal(f.calls.attachments.length,0);assert.equal(f.calls.sets.length,0);
+  for(const id of ['connect','apply','insert-test-logos','restore-standard-signature']) assert.equal(doc.elements[id].disabled,false);
 });
 
 test('pilot waits for normal profile loading and returns controls after failure',async t=>{
