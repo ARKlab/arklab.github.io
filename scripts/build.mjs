@@ -36,6 +36,15 @@ const sample={name:'First name Last name',title:'Job title',email:'name@example.
 renderSignature(bundle,sample,{officeCss:true});renderSignature(bundle,sample,{compact:true,officeCss:true});
 await rm('dist',{recursive:true,force:true});await mkdir('dist',{recursive:true});
 await cp('public','dist',{recursive:true});
+// Pilot artwork stays separate from the released bundle and compose runtime.
+const pilotAssets={};
+for(const [key,file] of Object.entries({arkFallback:'ark-fallback',arkWhite:'ark-white',artesianFallback:'artesian-fallback',artesianWhite:'artesian-white'})) {
+  const bytes=await readFile(`public/experiments/logo-colours/${file}.png`);
+  if(bytes.length>100000||bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a') throw new Error('Invalid pilot PNG.');
+  const hash=createHash('sha256').update(bytes).digest('hex').slice(0,12);
+  pilotAssets[key]={filename:`ark-signatures-trial-${file}-${hash}.png`,base64:bytes.toString('base64')};
+}
+await writeFile('dist/experiments/logo-colours/assets.json',JSON.stringify(pilotAssets));
 await writeFile('dist/signature-bundle.json',JSON.stringify(bundle));
 await mkdir('dist/.well-known',{recursive:true});
 await writeFile('dist/.well-known/microsoft-officeaddins-allowed.json',JSON.stringify({allowed:[new URL('runtime.js',site).href]},null,2));
