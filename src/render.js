@@ -67,7 +67,7 @@ export function renderSignature(bundle, profile, {compact=false, images='cid', o
   const artesianUrl=httpsUrl(b.artesianWebsite,true);
   const logo = key => images==='preview' ? `data:image/png;base64,${bundle.assets[key].base64}` : `cid:${bundle.assets[key].filename}`;
   const artesianName=!compact && b.artesianWordmark
-    ? `<img src="${logo('artesian')}" alt="Artesian" width="62" height="18" border="0" style="display:inline-block;width:62px;height:18px;border:0;vertical-align:middle;">`
+    ? `<img src="${logo('artesian')}" alt="Artesian" width="64" height="20" border="0" style="display:inline-block;width:64px;height:20px;border:0;vertical-align:middle;">`
     : 'Artesian';
   const values={
     NAME:escapeHtml(profile.name), TITLE:escapeHtml(profile.title), EMAIL:escapeHtml(profile.email),

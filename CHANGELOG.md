@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.3 — 11 September 2026
+
+Standardise the approved outlined ARK and Artesian logos in all full signatures. The same artwork keeps the original dark lettering on light backgrounds and reveals a fine pale outline on dark backgrounds.
+
+- Promote the exact PNGs approved during the logo trial, with matching editable SVGs. Preserve their transparent padding at ARK 92 × 32 and Artesian 64 × 20 CSS pixels.
+- Embed only the two standard logos. Retire the account-targeted test controls, hidden white images and conditional switching rules. The trial's received email lost those rules and white images along the Outlook-to-iCloud delivery path.
+- Keep the compact reply/forward design, company wording, profile permissions and automatic sign-in recovery.
+
+Validation: 52 regression tests pass. The owner approved the outlined appearance after Outlook Mac composition and an external received-message test in Apple Mail. The standard PNG bytes match those accepted trial assets. Broader client coverage remains in the acceptance checklist.
+
+The manifest remains `1.0.0.0`; no Microsoft 365 redeployment or assignment change is required. After Pages publication, new compose sessions fetch the updated bundle. Existing drafts can use **Refresh this message**. Restart Outlook if a cached pane still shows the retired test controls.
+
 ## 1.0.2 — 10 September 2026
 
 Automatic insertion now attempts silent recovery when Outlook rejects a sign-in that can succeed on retry. Previously, these token-acquisition exceptions stopped insertion immediately, even though opening the pane and refreshing could work.

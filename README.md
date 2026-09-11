@@ -4,7 +4,7 @@ One company signature, managed centrally for Mac, Windows and web Outlook.
 
 The shared design pairs ARK with “Home of” followed by a small official Artesian wordmark, linking to https://www.artesian.cloud/. The descriptor is **Energy markets. Managed data services. Technology.** New messages use the full design; replies and forwards use a compact version.
 
-**1.0 general release — v1.0.2, 10 September 2026.** This patch adds one silent fresh-token retry for recoverable sign-in rejections during automatic insertion, with bounded waits and safe diagnostics. The approved full and compact signatures remain unchanged. The app uses Outlook SSO and delegated `User.Read` for the signed-in user's own profile. Microsoft 365 administrators control employee assignment separately; publishing a release does not change that list. Remaining client scenarios are recorded in the acceptance checklist.
+**1.0 series · package v1.0.3.** Full signatures use the approved outlined ARK and Artesian logos on both light and dark backgrounds. The original letter shapes and colours are preserved; a fine pale outline keeps dark lettering visible against dark email backgrounds. The temporary logo-switching controls have been retired. The app uses Outlook SSO and delegated `User.Read` for the signed-in user's own profile. Microsoft 365 administrators control employee assignment separately; publishing a release does not change that list. Remaining client scenarios are recorded in the acceptance checklist.
 
 ## How it works
 
@@ -27,6 +27,8 @@ Employee data and credentials are not stored in this repository. The add-in read
 | Pause or resume automatic insertion | `enabled` in `deployment.json` |
 
 Save a reviewed change to `main`; the workflow runs tests, builds and publishes it. Future compose sessions fetch the new bundle after Pages finishes publishing. Existing drafts are not automatically rewritten; use **ARK signatures → Refresh this message**. A change does not rewrite already sent messages. Authentication, host caching and availability mean this is not an instantaneous push to every open Outlook window.
+
+Matching editable SVGs accompany the PNGs. Display sizes, outline details and the completed email test are recorded in [the logo decision](docs/LOGO-COLOUR-PILOT.md). No theme detection or alternative hidden images are used.
 
 ## Deploy the release
 

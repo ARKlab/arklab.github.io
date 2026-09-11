@@ -1,38 +1,28 @@
-# Account-targeted logo colour test
+# Logo colour decision — pilot completed
 
-This experiment adds a manual test to the existing task pane for one configured pilot account. It does not change automatic signatures, the production signature bundle, saved preferences, the manifest, Microsoft 365 assignments or Graph permissions. The account's address is matched through a fixed SHA-256 digest; this is feature targeting, not an authentication boundary or anonymisation. Source and artwork are public, like the existing site. No employee directory or profile is published.
+On 11 September 2026, the owner approved the outlined ARK and Artesian logos as the standard full-signature artwork for both light and dark backgrounds. Package 1.0.3 promotes those exact PNGs and retires the account-targeted test controls, alternative white images and switching rules.
 
-GitHub Pages has one production address and currently allows deployments only from `main`. A branch does not produce a mailbox-specific deployment. This branch therefore needs the normal reviewed merge to publish the account-targeted task-pane controls. The experimental implementation is separated into `src/experiments/` and its artwork into `public/experiments/logo-colours/`. No Pages policy or repository protection needs to change. No Microsoft 365 manifest upload is required.
+## Standard artwork
 
-## Test
+The original vector letter shapes, dark fills and blue symbols are preserved. A pale `#F2F5F6` outline extends 0.4 CSS pixels beyond the dark lettering. One pixel of transparent padding on each side prevents clipping. The same image appears on both backgrounds; no theme detection is needed.
 
-1. After publication, reopen the ARK signatures panel; restart Outlook if it retains the older task-pane script.
-2. In the assigned account, create a new HTML email using that account's own sending address. Wait for the normal automatic signature to appear.
-3. Open ARK signatures, then choose **Insert test logos** under **Logo colour test**. The action changes only the signature slot of this draft and sends no message.
-4. Send a test yourself to an internal Microsoft 365 mailbox and an external mailbox. Open the same received message in light and dark mode in Apple Mail and Outlook Mac, web and Windows.
-5. Check both linked logos, hidden-image duplication, blocked images and the signature in quoted replies/forwards. Newly added reply signatures remain the current compact text version.
-6. **Restore standard signature** restores the current company design in the draft. The normal **Refresh this message** button also restores it. New messages always start with the released design.
+| Logo | PNG and matching SVG | Display size | PNG size |
+|---|---|---|---|
+| ARK | `public/assets/ark-logo.*` | 92 × 32 | 368 × 128 |
+| Artesian | `public/assets/artesian-wordmark-color.*` | 64 × 20 | 256 × 80 |
 
-The main panel preview remains the standard company design; inspect the actual draft after clicking the trial button. If a slow automatic insertion finishes after the manual action, it may restore the standard signature: wait for the normal signature, then insert the test again. This pilot deliberately leaves the automatic runtime unchanged.
+The two PNGs total 23,867 bytes and are embedded as inline CID attachments. The PNGs exactly match the approved trial fallback assets. Matching SVGs are editable sources; email signatures use PNGs. Compact replies and forwards continue to use linked text without logo attachments.
 
-The trial and restore actions preserve existing attachments. Repeated insertion reuses its four named inline PNGs. Restoring the original HTML can leave unused trial PNG attachments in that draft; use a fresh draft for clean production mail.
+## Why the switching experiment ended
 
-## Rendering
+The test supplied outlined dark-lettered and hidden white-lettered versions, with scoped dark-mode switching rules. Browser simulations displayed the intended pairs. In the actual Outlook Mac compose test, only the outlined versions appeared. The owner reported the same result in the received email in Apple Mail.
 
-The original vector glyph paths and blue symbols are preserved. Dark-lettered versions have a pale `#F2F5F6` outline extending 0.4 CSS pixels at display size. White-lettered variants are for supported dark-mode clients. Transparent padding prevents outline clipping. Display sizes including padding are ARK 92 × 32 and Artesian 64 × 20; PNGs are exported at 4×.
+Inspection of that received email's raw MIME source found no style blocks, no media queries, no pilot classes, and only the two fallback images. Both white image elements and attachments were absent. The switching rules and artwork were lost along the tested delivery path; the received message had nothing to switch to. This evidence does not isolate the exact insertion, sending or transport step.
 
-Four PNGs are embedded as inline CID attachments. Scoped `prefers-color-scheme:dark` rules and Outlook `data-ogsc`/`data-ogsb` selectors switch the image pair. White images default to `display:none` with zero inline and HTML dimensions; classic Outlook's MSO conditional comments exclude them. Inline fallbacks remain when a sending client strips style blocks. No script, sender-theme detection, tracking pixel, external image request or message-wide dark-mode rule is inserted into email.
+The owner preferred the outlined appearance in dark mode and the original-looking lettering on light backgrounds, so it became the standard design. Keep the raw email, screenshots and employee details outside this public repository. This acceptance covers the tested appearance, not every email client or scenario; the remaining checks are in [ACCEPTANCE.md](ACCEPTANCE.md).
 
-Reference patterns: [Litmus dark-mode guide](https://www.litmus.com/blog/coding-emails-for-dark-mode), [Can I email compatibility tests](https://www.caniemail.com/features/css-at-media-prefers-color-scheme/). Support varies with client and version. A browser simulation cannot prove that Outlook preserves the CSS during delivery.
+## Publication and existing messages
 
-## Acceptance record
+After the reviewed change reaches `main`, the existing workflow publishes the updated signature bundle and panel. New compose sessions use the standard outlined artwork. Existing drafts can use **ARK signatures → Refresh this message**. If Outlook retains an old panel showing test controls, close and reopen Outlook. Sent messages retain their embedded images.
 
-Automated checks cover the configured pilot address using real Web Crypto, no additional work for non-pilot users, own-sender/profile checks, HTML-only new drafts and their rejection message, pause handling, duplicate clicks/attachments, standard restoration and safe default hiding. Synthetic profiles cover the insertion flows. Browser checks and received-mail results are recorded separately. Do not treat publication or a successful preview as cross-client email acceptance.
-
-On 11 September 2026, all 64 automated tests and Microsoft's manifest validation passed. Browser inspection of the actual rendered HTML confirmed exactly two visible logos in five cases: light and dark media-query contexts, removed style blocks, removed inline styles, and the Outlook `data-ogsc` selector. Media-query contexts were supplied through the containing iframe's `color-scheme`; no email client was simulated. Real sent/received Outlook testing is still pending.
-
-The built automatic runtime, production signature bundle, manifest and Outlook well-known file are byte-for-byte identical to release 1.0.2. The four trial PNGs total 37,080 bytes; the rendered HTML is approximately 8 KB, below the existing 30 KB signature limit.
-
-## Rollback
-
-Remove the `installLogoPilot` import and call in `src/taskpane.js` and publish through the existing reviewed workflow. The files under `experiments/` can remain inert. No mailbox preferences or Microsoft 365 assignment changes need to be reversed.
+The manifest, Graph permissions and Microsoft 365 assignments are unchanged. No new Microsoft 365 deployment is required. To revert the artwork, restore the previous standard PNGs and display dimensions in a reviewed change; there is no per-user test preference to clear.
