@@ -11,7 +11,7 @@ const compiled=await build({
     builder.onResolve({filter:/^\.\/(auth|network)\.js$/},args=>({path:args.path,namespace:'fixture'}));
     builder.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:args.path.endsWith('auth.js')
       ? 'export const graphProfile=(...args)=>fixtures.graphProfile(...args); export const isConfigured=()=>true;'
-      : 'export const fetchBundle=()=>fixtures.fetchBundle(); export const jsonRequest=()=>{throw new Error("Non-pilot account must not download trial artwork");};'}));
+      : 'export const fetchBundle=()=>fixtures.fetchBundle();'}));
   }}]
 });
 const bundle=JSON.parse(await readFile('branding.json','utf8'));

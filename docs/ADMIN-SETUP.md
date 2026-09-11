@@ -1,6 +1,6 @@
 # Administrator setup
 
-This is the 1.0 general release, package v1.0.2. The owner accepted the end of the pilot on 9 September 2026. Publishing GitHub Pages or creating a GitHub release does not register, install or assign the Microsoft 365 add-in.
+This is the 1.0 series, package v1.0.3. The owner accepted the end of the deployment pilot on 9 September 2026 and standardised the outlined logos on 11 September. Publishing GitHub Pages or creating a GitHub release does not register, install or assign the Microsoft 365 add-in.
 
 ## Hosting prerequisite
 

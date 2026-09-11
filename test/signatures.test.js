@@ -134,7 +134,8 @@ test('the official small wordmark is linked in full signatures and becomes text 
   const html=renderSignature(bundle,p);
   assert.equal((html.match(/<img /g)||[]).length,2);
   assert.ok(html.includes('cid:artesian-test.png'));
-  assert.ok(html.includes('width="62" height="18"'));
+  assert.ok(html.includes('width="92" height="32"'));
+  assert.ok(html.includes('width="64" height="20"'));
   assert.ok(!renderSignature(bundle,p,{compact:true}).includes('<img'));
 });
 
@@ -162,6 +163,8 @@ test('email formatting survives removal of either style blocks or inline styles'
     assert.ok(withoutStyleBlock.includes('text-decoration:none'));
     assert.ok(withoutStyleBlock.includes('<strong'));
     assert.ok(withoutStyleBlock.includes('Alex Example'));
+    assert.equal((withoutStyleBlock.match(/<img /g)||[]).length,compact?0:2);
+    assert.ok(!withoutStyleBlock.includes('display:none'));
     const withoutInlineStyles=html.replace(/\sstyle="[^"]*"/g,'');
     assert.ok(withoutInlineStyles.includes('<style'));
     assert.ok(withoutInlineStyles.includes('font-family:Arial,Helvetica,sans-serif'));

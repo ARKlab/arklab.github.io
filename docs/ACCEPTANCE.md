@@ -6,6 +6,8 @@ On 9 September 2026, the owner accepted the transition from pilot to general rel
 
 Record the client version, date, result and any screenshot for each scenario on **Mac, Windows new/classic as used by the team, and Outlook on the web**. On 8 September 2026, the pilot user approved two received external test messages: the revised full signature and the compact signature on a forwarded message. The screenshots confirm that typography, colours, logo sizing, phone spacing and the country-only footer now survive delivery. Keep screenshots and employee details outside this public repository. These results establish the v1.0.0 design baseline; they do not certify every Outlook client or every scenario below.
 
+On 11 September 2026, the owner approved using the outlined trial logos as the standard for light and dark backgrounds. They were displayed in dark Outlook Mac composition and reported identically in the received Apple Mail test. The received MIME source retained exactly those two PNGs and removed the alternative white images and switching rules. Version 1.0.3 embeds the same approved PNG bytes directly, with no conditional switching. The 52 production regression tests remain; the 12 tests for the removed experiment were retired with that code.
+
 | Scenario | Expected result | Result |
 |---|---|---|
 | Admin assignment | Saved deployment targets the approved user list | Last verified assignment: three named users, 9 September 2026. A wider employee list is being prepared for owner review before any assignment change; membership is recorded internally |
@@ -16,7 +18,7 @@ Record the client version, date, result and any screenshot for each scenario on 
 | New plain-text message | Readable contact details and co-brand line; no HTML or logo attachments | Pending |
 | Internal and external delivery | Both small logo images display; clickable email/phone links work; layout survives transport | External visual checks passed for full and compact forward signatures after the formatting correction. Link-click verification and internal delivery pending |
 | Sent Items | The compose-time signature is visible | Pending |
-| Narrow window and dark mode | Text remains legible, no clipping; the small Artesian wordmark and reply text link are legible | Pending |
+| Narrow window and dark mode | Text remains legible, no clipping; the small Artesian wordmark and reply text link are legible | Outlined full-signature logos accepted on 11 September 2026 following Outlook Mac dark composition and external Apple Mail receipt. Narrow-window, compact dark-mode and other client checks remain pending |
 | Images blocked | Employee details remain readable; inline logo behaviour checked | Pending |
 | Missing job title, phone or location | Missing lines are omitted | Pending |
 | Repeated Refresh | Signature replaces itself; no duplicate logo attachments | Pending |
