@@ -56,5 +56,5 @@ export function supportDetails(error) {
 export function failureReference(error) {
   // Fixed stage names and numeric Office codes only; never copy a provider's
   // message or object into the message banner (Outlook limits it to 150 chars).
-  return [supportStages.has(error.stage)?error.stage:undefined,supportResults.test(error.message)?error.message:undefined].filter(Boolean).join('/');
+  return [supportStages.has(error.stage)?error.stage:undefined,/^OUTLOOK_\d{1,10}$/.test(error.message)?error.message:undefined].filter(Boolean).join('/');
 }

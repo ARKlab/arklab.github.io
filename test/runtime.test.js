@@ -24,7 +24,8 @@ function runtime({persistent=false,senderAddress='alex@ark-energy.eu',proxyAddre
   if (['Android','iOS'].includes(platform)) {
     const session=new Map();
     item.getAttachmentsAsync=()=>assert.fail('Unsupported mobile API');item.body.getTypeAsync=()=>assert.fail('Unsupported mobile API');
-    item.sessionData={getAsync:(key,cb)=>sessionFailure?cb({status:'failed',error:{code:sessionFailure}}):session.has(key)?ok(cb,session.get(key)):cb({status:'failed',error:{code:9050}}),setAsync:(key,value,cb)=>{session.set(key,value);ok(cb);}};
+    // null models a failed callback with no error code; undefined keeps normal reads.
+    item.sessionData={getAsync:(key,cb)=>sessionFailure!==undefined?cb({status:'failed',error:sessionFailure===null?{}:{code:sessionFailure}}):session.has(key)?ok(cb,session.get(key)):cb({status:'failed',error:{code:9050}}),setAsync:(key,value,cb)=>{session.set(key,value);ok(cb);}};
     item.addFileAttachmentFromBase64Async=(_bytes,_name,_options,cb)=>{calls.attachments++;ok(cb,'attachment');};
   }
   if(signatureFailure) item.body.setSignatureAsync=(_html,_options,cb)=>cb({status:'failed',error:{code:signatureFailure}});
@@ -66,11 +67,18 @@ test('mobile Office failures expose a short numeric support reference without pr
   for(const [options,reference] of [
     [{sessionFailure:9051},'session-read/OUTLOOK_9051'],
     [{signatureFailure:5001},'signature-write/OUTLOOK_5001'],
+    [{signatureFailure:9999999999},'signature-write/OUTLOOK_9999999999'],
+    [{sessionFailure:null},'session-read'],
     [{sessionFailure:'SECRET_EMPLOYEE_ADDRESS'},'session-read']
   ]) {
     const {run,calls}=runtime({platform:'Android',...options});await run();
     assert.equal(calls.sets.length,0);assert.equal(calls.completed,1);assert.equal(calls.warnings.length,1);
     assert.ok(calls.warnings[0].includes('('+reference+')'));
+    assert.ok(calls.warnings[0].includes('share this reference with IT'));
+    if(options.sessionFailure===null) {
+      assert.equal(calls.warnings[0].includes('OUTLOOK_FAILED'),false);
+      assert.ok(calls.details[0].includes('Result: OUTLOOK_FAILED'));
+    }
     assert.ok(calls.warnings[0].length<=150);assert.ok(calls.details[0].includes('Step: '));
     assert.equal((calls.warnings.join()+calls.details.join()).includes('SECRET_'),false);
   }

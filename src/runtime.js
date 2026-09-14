@@ -24,7 +24,7 @@ function messageFor(error) {
   if (error.message==='REQUEST_TIMEOUT') return 'ARK signatures reached its time limit. Your existing signature has been kept. Open ARK signatures to retry.';
   if(isMobileOutlook()) {
     const reference=failureReference(error);
-    if(reference) return `ARK signatures could not refresh (${reference}). Open ARK signatures from a received email; share this code with IT.`;
+    if(reference) return `ARK signatures could not refresh (${reference}). Open ARK signatures from a received email; share this reference with IT.`;
     return 'ARK signatures could not refresh. Your existing signature has been kept. Check ARK signatures from a received email, then start a new draft.';
   }
   return 'ARK signatures could not refresh. Your existing signature has been kept; use ARK signatures to retry.';
