@@ -6,7 +6,7 @@ import {readFile} from 'node:fs/promises';
 import {applySignature} from '../src/office-flow.js';
 
 // Exercise the generated artifact: a correct handler alone does not enable
-// mobile deployment. Full XML schema validation is a separate release check.
+// mobile deployment. CI also validates the built XML before publishing Pages.
 await promisify(execFile)(process.execPath,['scripts/build.mjs']);
 const manifest=await readFile('dist/manifest.xml','utf8');
 const section=name=>manifest.match(new RegExp(`<${name}>([\\s\\S]*?)</${name}>`))?.[1];

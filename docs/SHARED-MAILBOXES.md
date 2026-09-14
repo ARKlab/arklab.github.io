@@ -14,6 +14,8 @@ Version **1.2.0**, manifest **1.2.0.0**, enables `SupportsSharedFolders` inside 
 
 Use supported Microsoft 365 clients with the app's existing Mailbox 1.13 and NestedAppAuth 1.1 capabilities. See [Microsoft's shared-mailbox support and setup guide](https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/delegate-access) and [From-change behavior](https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/onmessagefromchanged-onappointmentfromchanged-events). These document platform support; they do not certify this app's real-client results.
 
+Microsoft's [add-in availability table](https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/delegate-access#add-ins-in-shared-mailbox-scenarios), checked on 2026-09-14, explicitly covers **Open another mailbox** in a separate web tab/window and promoted shared mailboxes in new Windows. It requires shared-mailbox manifest support and installation in the employee's primary mailbox for compose in those contexts. These remain acceptance targets, not confirmed device results.
+
 ## Signature identity
 
 The selected **From** address controls the signature. A sender on an approved company domain that does not match the signed-in employee's primary address or directory SMTP aliases receives its Outlook display name and email, plus the common ARK/Artesian branding. If Outlook supplies no display name, the email is used. The employee's personal job title and phone numbers are omitted. New messages use the full layout; replies and forwards use the compact layout.

@@ -55,7 +55,7 @@ Keep employee screenshots and mail samples in internal records, outside this pub
 | Generated mobile events, recovery command and desktop surfaces | Automated checks pass |
 | Mobile-safe API path, duplicate prevention, partial failure and cancellation | Automated checks pass |
 | Silent own-profile SSO, alias handling and explicit consent recovery | Simulated runtime checks pass |
-| Microsoft XML manifest validation | Passed for 1.1.0.0 |
+| Microsoft XML manifest validation | Passed for 1.2.0.0 (current desktop and mobile manifest) |
 | Microsoft 365 manifest update and phone delivery | Pending |
 | Real Android SSO and automatic compose/reply/forward insertion | Pending |
 | Received-message appearance, clickable links and sender switching | Pending |

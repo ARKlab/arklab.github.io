@@ -2,7 +2,7 @@
 
 ## 1.2.0 — Desktop shared-mailbox activation
 
-The manifest omitted the shared-mailbox opt-in required to expose the add-in on Mac and some separately opened web/Windows setups. Enable `SupportsSharedFolders` on the desktop form factor and update the manifest to **1.2.0.0**.
+The manifest omitted the shared-mailbox opt-in required on Mac, in web **Open another mailbox** windows and in promoted shared mailboxes in new Windows. Enable `SupportsSharedFolders` on the desktop form factor and update the manifest to **1.2.0.0**. See the [Microsoft support matrix and pending acceptance checks](docs/SHARED-MAILBOXES.md).
 
 - Retain the existing app ID, employee assignments, `ReadWriteItem` Office permission and own-profile Graph `User.Read` scope. No shared mailbox is added to the deployment assignment and no directory or mail permissions are introduced.
 - Reuse the existing sender rules: an approved-domain shared From identity gets its Outlook display name and email, without the delegate's title or phone numbers. Personal accounts and verified aliases retain their own profile details.
