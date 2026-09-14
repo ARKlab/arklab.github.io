@@ -2,6 +2,8 @@
 
 Version 1.1.0 implements mobile support; version 1.1.1 fixes timeout and overlapping-insertion recovery, and version 1.1.2 handles an absent logo marker and adds safe failure references. Both patches use the same manifest. Automated checks and XML validation pass; real-phone acceptance is pending. The reported test client is Outlook for Android **5.2630.0 (72630118)**.
 
+Version 1.2.0 adds a desktop shared-mailbox setting in manifest **1.2.0.0**, retaining the same mobile declaration. Outlook does not support add-ins in mobile shared mailboxes. This phone test applies to a user's own Microsoft 365 mailbox.
+
 ## What changes
 
 New messages get the existing full signature with embedded outlined logos. Replies and forwards get the existing compact signature. From changes rerun insertion using the same verified-alias checks. Outlook SSO still reads only the signed-in user's profile with delegated `User.Read`.
@@ -15,7 +17,7 @@ Mobile insertions for the same item are queued within one runtime. Successful up
 ## Publish and update Microsoft 365
 
 1. Merge the reviewed change and wait for successful Pages publication. Verify the hosted code and `https://arklab.github.io/manifest.xml` are from the same build.
-2. In Microsoft 365 **Settings → Integrated apps → ARK signatures**, update the existing app's manifest to the published **1.1.0.0** file. Retain the existing app ID and assigned users. Do not create a duplicate production add-in or change Graph permissions.
+2. In Microsoft 365 **Settings → Integrated apps → ARK signatures**, update the existing app's manifest to the published **1.2.0.0** file. Mobile was introduced in 1.1.0.0; the current update adds desktop shared-mailbox activation. Retain the existing app ID and assigned users. Do not create a duplicate production add-in or change Graph permissions.
 3. Verify the saved update and allow Microsoft to deliver it. Publishing GitHub Pages does not update the manifest stored by Microsoft 365. A manifest update can incur Microsoft's deployment propagation delay.
 4. Restart Outlook on the test phone after delivery, then run the checks below. Updating the shared manifest enables mobile for all existing assigned users, not just the tester. Do not remove desktop users to narrow this test.
 
@@ -30,7 +32,7 @@ Use Outlook **4.2502.0 or later**, a Microsoft 365 business mailbox and a workin
 1. Open a received email and locate **ARK signatures** in the message's add-ins/menu. This opens a preview of **your own** profile. If Microsoft requests a sign-in check, choose **Continue with Microsoft 365**. The add-in does not modify the received email.
 2. Close the panel and create a fresh email. Wait for the signature, send a test and inspect both the received email and Sent Items. Confirm names, job title, numbers, logo appearance and links.
 3. Start a reply and a forward. Confirm the compact signature is beneath the new text. Expand a quick reply to full screen to see the signature.
-4. Where the client exposes an alternate From address, select a verified company alias and confirm the displayed email changes while the owner's details remain. Switch back and check the result and attachments for duplicates.
+4. If another assigned personal Exchange account is available in the From dropdown, switch to it and verify that account's signature. Microsoft does not support SMTP alias or shared/delegated mailbox From-change scenarios on mobile; test aliases on desktop.
 5. Repeat after leaving Outlook idle, and after restarting it. Test light and dark mode and a narrow portrait display.
 6. Check a temporary network failure. The add-in should preserve the current signature and complete its event without sending mail or overwriting the body. After reconnecting, start a new draft.
 
@@ -38,6 +40,7 @@ Keep employee screenshots and mail samples in internal records, outside this pub
 
 ## Mobile limitations
 
+- Shared-mailbox add-ins and shared/delegated mailbox From-change events are not supported on Android or iOS. A desktop manifest change cannot enable them on mobile. [Microsoft's shared-mailbox support matrix](https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/delegate-access) and [From-change event limitations](https://learn.microsoft.com/en-us/office/dev/add-ins/outlook/onmessagefromchanged-onappointmentfromchanged-events).
 - The add-in runs automatically in compose; the manual pane is available when reading a message. There is no mobile **Refresh this message** button. After resolving a connection failure, create a new draft; reopening a saved draft does not fire the new-message event.
 - A mobile event has a 60-second maximum and ends when the user sends or closes the message. Sending immediately can interrupt insertion; this app does not block sending or enforce signatures.
 - Quick-reply signatures may be hidden until the composer is expanded.

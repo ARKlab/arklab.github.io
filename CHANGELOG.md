@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.2.0 — Desktop shared-mailbox activation
+
+The manifest omitted the shared-mailbox opt-in required to expose the add-in on Mac and some separately opened web/Windows setups. Enable `SupportsSharedFolders` on the desktop form factor and update the manifest to **1.2.0.0**.
+
+- Retain the existing app ID, employee assignments, `ReadWriteItem` Office permission and own-profile Graph `User.Read` scope. No shared mailbox is added to the deployment assignment and no directory or mail permissions are introduced.
+- Reuse the existing sender rules: an approved-domain shared From identity gets its Outlook display name and email, without the delegate's title or phone numbers. Personal accounts and verified aliases retain their own profile details.
+- Cover the generated manifest, full/compact shared-sender insertion, compose preview and switching between shared and personal senders. Real client acceptance remains pending.
+
+An administrator must update the existing Microsoft 365 deployment after Pages publication; publishing hosted code alone does not enable shared-mailbox activation. Microsoft's delivery delay applies. Outlook mobile does not support add-ins in shared mailboxes; the existing mobile declaration and personal-mailbox behavior are retained. See [shared-mailbox setup and acceptance](docs/SHARED-MAILBOXES.md).
+
 ## 1.1.2 — Missing mobile marker recovery and diagnostics
 
 A new mobile draft could stop before its first logo upload when `sessionData.getAsync` returned Outlook's `KeyNotFound` code 9050. The marker is expected to be absent until insertion succeeds, but the previous flow treated that response as fatal.
