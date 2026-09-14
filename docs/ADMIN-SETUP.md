@@ -1,6 +1,6 @@
 # Administrator setup
 
-This is the 1.0 series, package v1.0.3. The owner accepted the end of the deployment pilot on 9 September 2026 and standardised the outlined logos on 11 September. Publishing GitHub Pages or creating a GitHub release does not register, install or assign the Microsoft 365 add-in.
+This is the 1.0 series, package v1.0.4. The owner accepted the end of the deployment pilot on 9 September 2026 and standardised the outlined logos on 11 September. Publishing GitHub Pages or creating a GitHub release does not register, install or assign the Microsoft 365 add-in.
 
 ## Hosting prerequisite
 
@@ -32,10 +32,12 @@ See [Microsoft's NAA registration guide](https://learn.microsoft.com/en-us/offic
 ## 2. Confirm brand and directory settings
 
 - The confirmed `artesianWebsite` is `https://www.artesian.cloud/`; update it in `branding.json` if the destination changes.
-- Confirm the sending domains in `approvedSenderDomains`.
+- Confirm the sending domains in `approvedSenderDomains`: currently `ark-energy.eu`, `ark-energy.it` and `artesian.cloud`.
 - Check the assigned employees' display name, job title, `businessPhones`, primary `mail` and `officeLocation` in Microsoft 365. Microsoft 365 administration is the central place to change those details.
 - `mobilePhone` is enabled in the current configuration. Before expanding the assignment, confirm that this field holds an approved business contact number for every affected employee, or is blank; otherwise set `includeMobilePhone:false`. Numbers appear without office/mobile labels. The directory profile's Business phone field is sufficient when Mobile phone is blank.
 - The shared location line is **Ireland · Italy**. Change `locationLine` centrally if required. Directory office locations are off by default; clear `locationLine` and enable `showOfficeLocation` to use them. Review any approved company/legal footer requirements before general rollout.
+
+For alternate sending addresses, register the SMTP alias on the employee's mailbox in Microsoft 365. The add-in reads `proxyAddresses` from that signed-in user's `/me` profile using the existing `User.Read` permission. A verified alias uses the employee's profile and the selected From email. Addresses not matched to that profile receive only the Outlook sender name and email, even on an approved domain. No employee alias list is stored in GitHub, and this app does not configure Exchange's permission to send from aliases.
 
 ## 3. Publish and verify
 

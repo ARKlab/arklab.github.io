@@ -4,7 +4,7 @@ One company signature, managed centrally for Mac, Windows and web Outlook.
 
 The shared design pairs ARK with “Home of” followed by a small official Artesian wordmark, linking to https://www.artesian.cloud/. The descriptor is **Energy markets. Managed data services. Technology.** New messages use the full design; replies and forwards use a compact version.
 
-**1.0 series · package v1.0.3.** Full signatures use the approved outlined ARK and Artesian logos on both light and dark backgrounds. The original letter shapes and colours are preserved; a fine pale outline keeps dark lettering visible against dark email backgrounds. The temporary logo-switching controls have been retired. The app uses Outlook SSO and delegated `User.Read` for the signed-in user's own profile. Microsoft 365 administrators control employee assignment separately; publishing a release does not change that list. Remaining client scenarios are recorded in the acceptance checklist.
+**1.0 series · package v1.0.4.** Signatures recognise SMTP aliases registered on the signed-in user's Microsoft 365 profile, including the approved `ark-energy.it` domain. They keep that user's contact details and display the selected From address. Full signatures use the approved outlined ARK and Artesian logos on both light and dark backgrounds. The app uses Outlook SSO and delegated `User.Read` for the signed-in user's own profile. Microsoft 365 administrators control employee assignment separately; publishing a release does not change that list. Remaining client scenarios are recorded in the acceptance checklist.
 
 ## How it works
 
@@ -53,7 +53,7 @@ The local preview is at `http://127.0.0.1:8766`. Outlook installation uses the p
 
 - Supported targets are current Microsoft 365 Outlook on Mac, Windows (new and classic) and the web. The manifest uses Mailbox 1.13 and the code checks NestedAppAuth 1.1. Older clients need updating.
 - Mobile, Apple Mail, shared mailbox deployment and centrally enforced signatures at the mail server are outside this release.
-- An alternate sending address in an approved company domain receives its Outlook display name and email, with no borrowed job title or phone number. Other domains are skipped and a notice is shown. Verify sender switching before rollout.
+- A sending address matching the signed-in user's primary address, sign-in address or directory SMTP alias receives that user's name, title and phone numbers, with the selected From address as its email link. An unverified address in an approved company domain receives only its Outlook display name and email. Other domains are skipped and a notice is shown. Verify sender switching before rollout.
 - If authentication or the service is unavailable, the current signature is kept and a retry notice is shown. Maintain a local signature fallback if service availability is important.
 - Users can still edit a message or remove a signature. This manages the default signature; it is not a compliance enforcement system.
 - Missing fields are omitted. The country line is shared centrally; directory office locations are optional and off by default. Directory mobile numbers are not published unless an administrator explicitly enables them in `branding.json`.
@@ -66,6 +66,7 @@ The local preview is at `http://127.0.0.1:8766`. Outlook installation uses the p
 - [Microsoft: supported NAA clients](https://learn.microsoft.com/en-us/javascript/api/requirement-sets/common/nested-app-auth-requirement-sets)
 - [Microsoft: setSignatureAsync, including CSS constraints](https://learn.microsoft.com/en-us/javascript/api/outlook/office.body)
 - [Microsoft: signed-in user profile and permissions](https://learn.microsoft.com/en-us/graph/api/user-get)
+- [Microsoft: user properties, including SMTP proxy addresses](https://learn.microsoft.com/en-us/graph/api/resources/user)
 - [Microsoft: centrally deploy add-ins](https://learn.microsoft.com/en-us/microsoft-365/admin/manage/centralized-deployment-of-add-ins)
 
 The renderer retains matching inline formatting and scoped internal CSS so the signature remains styled when an Outlook client discards one form. The approved full and compact forward designs have been checked in received emails; the remaining client scenarios are tracked in the acceptance checklist.

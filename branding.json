@@ -12,5 +12,5 @@
   "includeMobilePhone": true,
   "maxPhoneNumbers": 2,
   "compactReplies": true,
-  "approvedSenderDomains": ["ark-energy.eu", "artesian.cloud"]
+  "approvedSenderDomains": ["ark-energy.eu", "ark-energy.it", "artesian.cloud"]
 }
