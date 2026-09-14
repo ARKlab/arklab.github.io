@@ -5,7 +5,7 @@ import {profileForSender,renderSignature,plainSignature,formatPhoneNumber} from 
 import {applySignature,completeEvent} from '../src/office-flow.js';
 
 // Stable fixtures keep routine company configuration edits independent of test expectations.
-const branding={schemaVersion:1,descriptor:'Energy markets. Managed data services. Technology.',relationship:'Home of',arkWebsite:'https://www.ark-energy.eu/en',arkWebsiteLabel:'ark-energy.eu',artesianWebsite:'https://www.artesian.cloud/',artesianWebsiteLabel:'artesian.cloud',artesianWordmark:true,showOfficeLocation:true,includeMobilePhone:false,maxPhoneNumbers:2,compactReplies:true,approvedSenderDomains:['ark-energy.eu','artesian.cloud']};
+const branding={schemaVersion:1,descriptor:'Energy markets. Managed data services. Technology.',relationship:'Home of',arkWebsite:'https://www.ark-energy.eu/en',arkWebsiteLabel:'ark-energy.eu',artesianWebsite:'https://www.artesian.cloud/',artesianWebsiteLabel:'artesian.cloud',artesianWordmark:true,showOfficeLocation:true,includeMobilePhone:false,maxPhoneNumbers:2,compactReplies:true,approvedSenderDomains:['ark-energy.eu','ark-energy.it','artesian.cloud']};
 const bundle={enabled:true,branding,revision:'test123',assets:{ark:{filename:'ark-test.png',base64:'eA=='},artesian:{filename:'artesian-test.png',base64:'eA=='}},templates:{full:await readFile(new URL('../templates/full.html',import.meta.url),'utf8'),reply:await readFile(new URL('../templates/reply.html',import.meta.url),'utf8')}};
 const graph={displayName:'Alex Example',mail:'alex@ark-energy.eu',userPrincipalName:'alex@ark-energy.eu',jobTitle:'Director',businessPhones:['+353 83 111 2222'],mobilePhone:'+39 333 111 2222',officeLocation:'Dublin'};
 const sender={displayName:'Alex Example',emailAddress:'alex@ark-energy.eu'};
@@ -42,6 +42,29 @@ test('changing From never leaks another employee’s title or phone',()=>{
   const p=profileForSender(graph,{displayName:'Service team',emailAddress:'service@ark-energy.eu'},branding);
   assert.equal(p.directoryMatched,false);assert.equal(p.name,'Service team');assert.equal(p.title,'');assert.deepEqual(p.phones,[]);
   assert.throws(()=>profileForSender(graph,{emailAddress:'alex@example.org'},branding),/UNAPPROVED/);
+});
+test('a directory SMTP alias retains the owner profile and selected email in every signature form',()=>{
+  const alias='alex.italia@ark-energy.it';
+  const p=profileForSender({...graph,proxyAddresses:['SMTP:alex@ark-energy.eu','smtp:'+alias]},{emailAddress:alias},branding);
+  assert.equal(p.directoryMatched,true);assert.equal(p.name,graph.displayName);assert.equal(p.title,graph.jobTitle);
+  assert.deepEqual(p.phones,graph.businessPhones);assert.equal(p.email,alias);
+  for(const compact of [false,true]) {
+    const html=renderSignature(bundle,p,{compact});
+    assert.ok(html.includes('mailto:'+alias));assert.ok(html.includes('Director'));
+    assert.ok(html.includes('+353&#160;83&#160;111&#160;2222'));
+    assert.ok(!html.includes('mailto:alex@ark-energy.eu'));
+    assert.ok(plainSignature(bundle,p,compact).includes(alias));
+  }
+});
+test('alias matching normalises SMTP case and ignores non-SMTP or unverified addresses',()=>{
+  const alias='alex@ark-energy.it';
+  const verified=profileForSender({...graph,proxyAddresses:[null,42,'SMTP: ALEX@ARK-ENERGY.IT ']},{emailAddress:alias},branding);
+  assert.equal(verified.directoryMatched,true);
+  for(const extras of [{},{proxyAddresses:null},{proxyAddresses:'smtp:'+alias},{proxyAddresses:['SIP:'+alias,'X500:'+alias,alias,'smtp:other@ark-energy.it']},{otherMails:[alias]}]) {
+    const p=profileForSender({...graph,...extras},{emailAddress:alias,displayName:'Other sender'},branding);
+    assert.equal(p.directoryMatched,false);assert.equal(p.title,'');assert.deepEqual(p.phones,[]);
+  }
+  assert.throws(()=>profileForSender({...graph,proxyAddresses:['smtp:alex@example.org']},{emailAddress:'alex@example.org'},branding),/UNAPPROVED/);
 });
 test('mailbox display names cannot smuggle mailto headers',()=>{
   const p=profileForSender({...graph,mail:'alex?subject=oops@ark-energy.eu'},{emailAddress:'alex?subject=oops@ark-energy.eu'},branding);
@@ -92,6 +115,14 @@ test('paused deployment and directory failures preserve the existing signature',
 test('sender switch during profile loading cancels an outdated insertion',async()=>{
   const {item,state}=fakeItem();
   await assert.rejects(applySignature({item,bundle,getGraph:async()=>{state.from={emailAddress:'other@ark-energy.eu'};return graph;}}),/SENDER_CHANGED/);
+  assert.equal(state.sets.length,0);
+});
+test('switching between verified aliases still cancels insertion for the previous From address',async()=>{
+  const {item,state}=fakeItem();
+  await assert.rejects(applySignature({item,bundle,getGraph:async()=>{
+    state.from={emailAddress:'alex@ark-energy.it'};
+    return {...graph,proxyAddresses:['SMTP:alex@ark-energy.eu','smtp:alex@ark-energy.it']};
+  }}),/SENDER_CHANGED/);
   assert.equal(state.sets.length,0);
 });
 test('event completion happens once, after successful insertion',async()=>{

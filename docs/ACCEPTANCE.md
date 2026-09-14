@@ -8,6 +8,8 @@ Record the client version, date, result and any screenshot for each scenario on 
 
 On 11 September 2026, the owner approved using the outlined trial logos as the standard for light and dark backgrounds. They were displayed in dark Outlook Mac composition and reported identically in the received Apple Mail test. The received MIME source retained exactly those two PNGs and removed the alternative white images and switching rules. Version 1.0.3 embeds the same approved PNG bytes directly, with no conditional switching. The 52 production regression tests remain; the 12 tests for the removed experiment were retired with that code.
 
+Version 1.0.4 passes 56 automated tests. It adds `ark-energy.it` to the approved domains and recognises SMTP aliases from the signed-in user's directory profile. Fixtures verify the selected alias in full, compact and plain-text signatures, retained owner contact details, safe handling of unverified addresses and automatic insertion after a From change. Actual Outlook alias delivery remains to be checked after publication.
+
 | Scenario | Expected result | Result |
 |---|---|---|
 | Admin assignment | Saved deployment targets the approved user list | Last verified assignment: three named users, 9 September 2026. A wider employee list is being prepared for owner review before any assignment change; membership is recorded internally |
@@ -23,7 +25,8 @@ On 11 September 2026, the owner approved using the outlined trial logos as the s
 | Missing job title, phone or location | Missing lines are omitted | Pending |
 | Repeated Refresh | Signature replaces itself; no duplicate logo attachments | Pending |
 | Existing Outlook signature | Company signature replaces the signature in the new message without duplicates; saved personal templates remain intact | Pending |
-| Switch approved sending identity | Current sender's identity; no borrowed title/phone from a different account | Pending |
+| Switch to own registered SMTP alias | Selected From email with the owner's name, title and phone numbers; sign-in remains the mailbox owner's | Automated checks pass in 1.0.4; real Outlook compose, reply/forward and send/receive checks pending |
+| Switch to another approved sending identity | Unverified sender's Outlook display name and email only; no borrowed title/phone from the signed-in account | Automated ownership and sender-change checks pass; real Outlook check pending |
 | Unapproved sending domain | Notice appears and the user checks the remaining signature | Pending |
 | Signed out / authentication expired | Recoverable rejection gets one silent retry; genuine sign-in checks require a user click; unrecovered failure preserves the existing signature | On 10 September a user reported recurrence after leaving Outlook open, recovering through the pane. Version 1.0.2 tests that failure/retry path with simulated provider responses. A real Mac idle-session retest is pending |
 | Network unavailable / slow Graph | No message body overwrite, no send block, existing signature preserved | Pending |

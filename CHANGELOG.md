@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.4 — 14 September 2026
+
+Fix signature insertion when sending from an `ark-energy.it` alias. Previously that domain was rejected, and alternate addresses were not matched to the signed-in user's full profile.
+
+- Approve `ark-energy.it` alongside the existing company domains.
+- Read SMTP aliases from `proxyAddresses` on the existing Microsoft Graph `/me` request. A matching alias retains the owner's name, title and phone numbers while displaying and linking the selected From address.
+- Keep sign-in tied to the mailbox owner. Unverified addresses retain the name/email-only fallback; non-SMTP contact addresses cannot establish ownership. The final From-address check still cancels insertion if the sender changes during profile retrieval.
+
+Validation: 56 automated tests pass, including verified aliases in full, compact and plain-text signatures, case handling, rejected ownership matches, sender changes and the compiled automatic From-change flow. A real Outlook send/receive test from the reported alias remains pending publication.
+
+The manifest remains `1.0.0.0`, with delegated `User.Read` and no directory-wide access. No Microsoft 365 redeployment, new permissions or employee-assignment change is required. Outlook may need to be restarted if it retains the previous hosted code.
+
 ## 1.0.3 — 11 September 2026
 
 Standardise the approved outlined ARK and Artesian logos in all full signatures. The same artwork keeps the original dark lettering on light backgrounds and reveals a fine pale outline on dark backgrounds.

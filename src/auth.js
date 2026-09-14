@@ -82,7 +82,7 @@ export async function graphProfile(config,{interactive=false,loginHint='',recove
     if (token.account?.tenantId && token.account.tenantId.toLowerCase()!==config.tenantId.toLowerCase()) throw new Error('TENANT_MISMATCH');
     try {
       // Only the signed-in person's profile; no directory-wide or mail permissions.
-      const profile=await jsonRequest('https://graph.microsoft.com/v1.0/me?$select=displayName,mail,userPrincipalName,jobTitle,businessPhones,mobilePhone,officeLocation',{
+      const profile=await jsonRequest('https://graph.microsoft.com/v1.0/me?$select=displayName,mail,userPrincipalName,proxyAddresses,jobTitle,businessPhones,mobilePhone,officeLocation',{
         headers:{Authorization:'Bearer '+token.accessToken},cache:'no-store',credentials:'omit'
       },remainingTime(context,8000,5000));
       remainingTime(context,5000);

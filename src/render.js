@@ -21,7 +21,13 @@ export function profileForSender(graph, sender, branding) {
   const email = emailAddress(sender.emailAddress);
   const domain = email.split('@')[1].toLowerCase();
   if (!branding.approvedSenderDomains.map(d => d.toLowerCase()).includes(domain)) throw new Error('UNAPPROVED_SENDER');
-  const identityMatch = [graph.mail, graph.userPrincipalName].filter(Boolean).some(e => e.toLowerCase() === email.toLowerCase());
+  // SMTP proxy addresses from /me belong to this mailbox. Other contact
+  // addresses (otherMails), SIP/X500 entries and similar names aren't proof.
+  const aliases = (Array.isArray(graph.proxyAddresses) ? graph.proxyAddresses : [])
+    .filter(value => typeof value === 'string' && /^smtp:/i.test(value))
+    .map(value => value.slice(5).trim());
+  const identityMatch = [graph.mail, graph.userPrincipalName, ...aliases]
+    .some(value => typeof value === 'string' && value.trim().toLowerCase() === email.toLowerCase());
   // Never put the signed-in person's title or numbers on another sending identity.
   if (!identityMatch) return {name:text(sender.displayName) || email, email, title:'', office:'', phones:[], directoryMatched:false};
   const phoneValues = [...(Array.isArray(graph.businessPhones) ? graph.businessPhones : [])];

@@ -40,6 +40,7 @@ test('normal SSO keeps User.Read and Graph /me with the mailbox hint',async()=>{
   assert.equal(s.calls.silent[0].loginHint,'employee@ark-energy.eu');
   assert.equal(s.calls.silent[0].forceRefresh,undefined);
   assert.ok(s.calls.graph[0][0].startsWith('https://graph.microsoft.com/v1.0/me?'));
+  assert.ok(new URL(s.calls.graph[0][0]).searchParams.get('$select').split(',').includes('proxyAddresses'));
   assert.equal(s.calls.popup.length,0);
 });
 
