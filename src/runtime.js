@@ -1,7 +1,7 @@
 import {fetchBundle} from './network.js';
 import {graphProfile} from './auth.js';
 import {applySignature,completeEvent} from './office-flow.js';
-import {supportDetails} from './errors.js';
+import {supportDetails,failureReference} from './errors.js';
 import {isMobileOutlook} from './platform.js';
 
 const siteUrl=__SITE_URL__;
@@ -22,7 +22,12 @@ function messageFor(error) {
   if (error.message==='SIGN_IN_TIMEOUT') return 'The Outlook sign-in timed out. Your existing signature has been kept. Open ARK signatures to retry.';
   if (error.message==='SIGN_IN_UNAVAILABLE') return 'Outlook could not sign in to Microsoft 365. Your existing signature has been kept. Open ARK signatures to retry.';
   if (error.message==='REQUEST_TIMEOUT') return 'ARK signatures reached its time limit. Your existing signature has been kept. Open ARK signatures to retry.';
-  return isMobileOutlook() ? 'ARK signatures could not refresh. Your existing signature has been kept. Check ARK signatures from a received email, then start a new draft.' : 'ARK signatures could not refresh. Your existing signature has been kept; use ARK signatures to retry.';
+  if(isMobileOutlook()) {
+    const reference=failureReference(error);
+    if(reference) return `ARK signatures could not refresh (${reference}). Open ARK signatures from a received email; share this code with IT.`;
+    return 'ARK signatures could not refresh. Your existing signature has been kept. Check ARK signatures from a received email, then start a new draft.';
+  }
+  return 'ARK signatures could not refresh. Your existing signature has been kept; use ARK signatures to retry.';
 }
 
 function onCompose(event) {

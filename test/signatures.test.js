@@ -24,7 +24,7 @@ function fakeItem({composeType='newMail',bodyType='html',existing=[],mobile=fals
     state.session=new Map();
     item.getAttachmentsAsync=()=>assert.fail('Mobile must not enumerate attachments');
     item.body.getTypeAsync=()=>assert.fail('Mobile must not request the body format');
-    item.sessionData={getAsync:(key,cb)=>ok(cb,state.session.get(key)),setAsync:(key,value,cb)=>{state.session.set(key,value);ok(cb);}};
+    item.sessionData={getAsync:(key,cb)=>state.session.has(key)?ok(cb,state.session.get(key)):cb({status:'failed',error:{code:9050}}),setAsync:(key,value,cb)=>{state.session.set(key,value);ok(cb);}};
   }
   return {item,state};
 }
@@ -51,6 +51,37 @@ test('mobile replies and forwards use compact HTML without attachment or session
     assert.ok(!state.sets[0].html.includes('<img'));
     assert.ok(state.sets[0].html.includes('Home of'));
   }
+});
+test('numeric or string KeyNotFound on a fresh mobile marker permits first insertion',async()=>{
+  for(const code of [9050,'9050']) {
+    const {item,state}=fakeItem({mobile:true});
+    item.sessionData.getAsync=(key,cb)=>state.session.has(key)?cb({status:'succeeded',value:state.session.get(key)}):cb({status:'failed',error:{code}});
+    await applySignature({item,bundle,mobile:true,getGraph:async()=>graph});
+    await applySignature({item,bundle,mobile:true,getGraph:async()=>graph});
+    assert.equal(state.attachments.length,2);assert.equal(state.sets.length,2);
+  }
+});
+test('a missing marker returned successfully as undefined also permits first insertion',async()=>{
+  const {item,state}=fakeItem({mobile:true});
+  item.sessionData.getAsync=(key,cb)=>cb({status:'succeeded',value:state.session.get(key)});
+  await applySignature({item,bundle,mobile:true,getGraph:async()=>graph});
+  assert.equal(state.attachments.length,2);assert.equal(state.sets.length,1);
+});
+test('other mobile session errors stop before upload and identify the failing step',async()=>{
+  const {item,state}=fakeItem({mobile:true});
+  item.sessionData.getAsync=(_key,cb)=>cb({status:'failed',error:{code:9051}});
+  await assert.rejects(applySignature({item,bundle,mobile:true,getGraph:async()=>graph}),error=>{
+    assert.equal(error.message,'OUTLOOK_9051');assert.equal(error.stage,'session-read');return true;
+  });
+  assert.equal(state.attachments.length,0);assert.equal(state.sets.length,0);
+});
+test('KeyNotFound from a session write is not mistaken for an absent marker',async()=>{
+  const {item,state}=fakeItem({mobile:true});
+  item.sessionData.setAsync=(_key,_value,cb)=>cb({status:'failed',error:{code:9050}});
+  await assert.rejects(applySignature({item,bundle,mobile:true,getGraph:async()=>graph}),error=>{
+    assert.equal(error.message,'OUTLOOK_9050');assert.equal(error.stage,'session-write');return true;
+  });
+  assert.equal(state.attachments.length,1);assert.equal(state.sets.length,0);
 });
 test('mobile session markers are isolated to each draft',async()=>{
   for (let index=0;index<2;index++) {
