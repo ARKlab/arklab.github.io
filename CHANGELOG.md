@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.1.0 — Android acceptance candidate
+
+Extend the add-in to Outlook mobile. Real Android deployment, SSO and sent-message checks remain pending; iOS is enabled by the same XML mobile declaration but is also unverified on a device.
+
+- Add `MobileFormFactor` with new-message and From-change events, and a received-message **ARK signatures** command for connection checks and preview.
+- Use HTML insertion on mobile without calling the unsupported body-format and attachment-list APIs. Track successfully attached logos in per-item session data to avoid duplicates across repeated events; no employee details or tokens are stored there.
+- Preserve full/compact signature designs, owner-only Graph SSO, verified aliases and sender-change cancellation. Keep desktop behaviour and the same app identity and permissions.
+- Hide received-message insertion in the mobile pane and direct recovery to a new draft after reconnection.
+
+Validation: 68 automated checks pass, including mobile runtime, alias switching, replies/forwards, partial attachment recovery, cancellation, draft isolation, consent and generated manifest coverage. Microsoft's manifest validator accepts the XML. These checks simulate Office APIs; they do not certify a real phone's behaviour.
+
+**Requires a Microsoft 365 manifest update to 1.1.0.0.** Pages publication updates the hosted code only. Keep the existing app and employee assignment; update its manifest after publication. Microsoft deployment propagation may apply. See [Android setup and acceptance](docs/ANDROID-SETUP.md).
+
 ## 1.0.4 — 14 September 2026
 
 Fix signature insertion when sending from an `ark-energy.it` alias. Previously that domain was rejected, and alternate addresses were not matched to the signed-in user's full profile.
@@ -8,7 +21,7 @@ Fix signature insertion when sending from an `ark-energy.it` alias. Previously t
 - Read SMTP aliases from `proxyAddresses` on the existing Microsoft Graph `/me` request. A matching alias retains the owner's name, title and phone numbers while displaying and linking the selected From address.
 - Keep sign-in tied to the mailbox owner. Unverified addresses retain the name/email-only fallback; non-SMTP contact addresses cannot establish ownership. The final From-address check still cancels insertion if the sender changes during profile retrieval.
 
-Validation: 56 automated tests pass, including verified aliases in full, compact and plain-text signatures, case handling, rejected ownership matches, sender changes and the compiled automatic From-change flow. A real Outlook send/receive test from the reported alias remains pending publication.
+Validation: 56 automated tests pass, including verified aliases in full, compact and plain-text signatures, case handling, rejected ownership matches, sender changes and the compiled automatic From-change flow. After publication on 14 September, the owner confirmed that sending from the reported alias works.
 
 The manifest remains `1.0.0.0`, with delegated `User.Read` and no directory-wide access. No Microsoft 365 redeployment, new permissions or employee-assignment change is required. Outlook may need to be restarted if it retains the previous hosted code.
 

@@ -2,6 +2,7 @@ import {fetchBundle} from './network.js';
 import {graphProfile} from './auth.js';
 import {applySignature,completeEvent} from './office-flow.js';
 import {supportDetails} from './errors.js';
+import {isMobileOutlook} from './platform.js';
 
 const siteUrl=__SITE_URL__;
 function notify(message) {
@@ -13,6 +14,7 @@ function notify(message) {
 }
 
 function messageFor(error) {
+  if (isMobileOutlook() && error.message.startsWith('SIGN_IN_')) return 'ARK signatures could not connect. Open ARK signatures from a received email to reconnect, then start a new draft.';
   if (error.message==='SIGN_IN_REQUIRED') return 'Open ARK signatures and choose Continue with Microsoft 365 to allow access to your profile.';
   if (error.message==='OUTLOOK_UPDATE_REQUIRED') return 'Your Outlook needs an update to use ARK signatures. Your existing signature has been kept.';
   if (error.message==='UNAPPROVED_SENDER') return 'ARK signatures is not configured for this sending address. Check the signature before sending.';
@@ -20,7 +22,7 @@ function messageFor(error) {
   if (error.message==='SIGN_IN_TIMEOUT') return 'The Outlook sign-in timed out. Your existing signature has been kept. Open ARK signatures to retry.';
   if (error.message==='SIGN_IN_UNAVAILABLE') return 'Outlook could not sign in to Microsoft 365. Your existing signature has been kept. Open ARK signatures to retry.';
   if (error.message==='REQUEST_TIMEOUT') return 'ARK signatures reached its time limit. Your existing signature has been kept. Open ARK signatures to retry.';
-  return 'ARK signatures could not refresh. Your existing signature has been kept; use ARK signatures to retry.';
+  return isMobileOutlook() ? 'ARK signatures could not refresh. Your existing signature has been kept. Check ARK signatures from a received email, then start a new draft.' : 'ARK signatures could not refresh. Your existing signature has been kept; use ARK signatures to retry.';
 }
 
 function onCompose(event) {
