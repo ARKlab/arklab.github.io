@@ -1,5 +1,7 @@
 const msalCodes=new Set(['temporarily_unavailable','server_error','bridge_connection_reset','bridge_timeout','bridge_handshake_failed','bridge_response_invalid','no_network_connectivity','no_account_error','no_account_found','nested_app_auth_bridge_disabled','unknown_error','invalid_grant','interaction_required','login_required','consent_required','user_cancelled','timed_out','monitor_window_timeout']);
 const subCodes=new Set(['basic_action','additional_action','message_only','consent_required','user_password_expired','bad_token','token_expired','protection_policy_required']);
+const supportStages=new Set(['sign-in','settings','profile','sender-read','sender-check','compose-type','body-type','attachment-list','session-read','attachment-upload','session-write','signature-write']);
+const supportResults=/^(SIGN_IN_(REQUIRED|UNAVAILABLE|BROKER_REJECTED|TIMEOUT|PENDING|CANCELLED)|REQUEST_(TIMEOUT|NETWORK_ERROR|INVALID_RESPONSE|FAILED_\d{3})|OUTLOOK_(\d{1,10}|FAILED|UPDATE_REQUIRED))$/;
 // Retain only support references, never raw provider messages, tokens or profiles.
 export function signatureError(code,stage,source={}) {
   const error=new Error(code);
@@ -41,12 +43,18 @@ export function errorText(error) {
 export function supportDetails(error) {
   // Error.message from arbitrary libraries is deliberately excluded.
   const lines=['ARK signatures '+(typeof __APP_VERSION__==='string'?__APP_VERSION__:'development'),'Time (UTC): '+(error.at||new Date().toISOString())];
-  if(['sign-in','settings','profile'].includes(error.stage)) lines.push('Step: '+error.stage);
+  if(supportStages.has(error.stage)) lines.push('Step: '+error.stage);
   if(/^\d{4,10}$/.test(error.microsoftCode||'')) lines.push('Microsoft code: AADSTS'+error.microsoftCode);
   if(/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(error.correlationId||'')) lines.push('Correlation ID: '+error.correlationId);
   if(msalCodes.has(error.msalCode)) lines.push('Sign-in code: '+error.msalCode);
   if(subCodes.has(error.subError)) lines.push('Sign-in detail: '+error.subError);
   if(error.attempts===1||error.attempts===2) lines.push('Token attempts: '+error.attempts);
-  if(/^(SIGN_IN_[A-Z_]+|REQUEST_(TIMEOUT|NETWORK_ERROR|INVALID_RESPONSE|FAILED_\d{3}))$/.test(error.message)) lines.push('Result: '+error.message);
+  if(supportResults.test(error.message)) lines.push('Result: '+error.message);
   return lines.join('\n');
+}
+
+export function failureReference(error) {
+  // Fixed stage names and numeric Office codes only; never copy a provider's
+  // message or object into the message banner (Outlook limits it to 150 chars).
+  return [supportStages.has(error.stage)?error.stage:undefined,/^OUTLOOK_\d{1,10}$/.test(error.message)?error.message:undefined].filter(Boolean).join('/');
 }

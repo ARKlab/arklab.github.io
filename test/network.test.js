@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {jsonRequest,fetchBundle} from '../src/network.js';
-import {errorText,signatureError,supportDetails} from '../src/errors.js';
+import {errorText,signatureError,supportDetails,failureReference} from '../src/errors.js';
 
 test('HTTP timeout aborts the fetch and reports a timeout, not the resulting abort error',async t=>{
   let signal;
@@ -55,4 +55,23 @@ test('numeric and symbolic sign-in codes are retained without copying arbitrary 
   const privateError=signatureError('SIGN_IN_UNAVAILABLE','sign-in',{errorCode:'private_employee_address',subError:'PRIVATE_TOKEN',message:'PRIVATE_PAYLOAD'});
   assert.equal(supportDetails(privateError).includes('private_employee'),false);
   assert.equal(supportDetails(privateError).includes('PRIVATE_'),false);
+});
+
+test('Office support references retain allowlisted steps and numeric codes only',()=>{
+  const error=signatureError('OUTLOOK_9050','session-read');
+  assert.ok(supportDetails(error).includes('Step: session-read'));
+  assert.ok(supportDetails(error).includes('Result: OUTLOOK_9050'));
+  assert.equal(failureReference(error),'session-read/OUTLOOK_9050');
+  for(const message of ['OUTLOOK_FAILED','OUTLOOK_UPDATE_REQUIRED','SIGN_IN_REQUIRED','REQUEST_FAILED_503']) {
+    const failure=signatureError(message,'session-read');
+    assert.equal(failureReference(failure),'session-read');
+    assert.ok(supportDetails(failure).includes('Result: '+message));
+    assert.equal(failureReference(signatureError(message,'PRIVATE_STEP')),'');
+  }
+  for(const message of ['OUTLOOK_PRIVATE_TOKEN','SIGN_IN_PRIVATE_TOKEN','OUTLOOK_9050 employee@example.com']) {
+    const failure=signatureError(message,'PRIVATE_STEP');
+    assert.equal(failureReference(failure),'');
+    assert.equal(supportDetails(failure).includes('PRIVATE_'),false);
+    assert.equal(supportDetails(failure).includes('employee@'),false);
+  }
 });

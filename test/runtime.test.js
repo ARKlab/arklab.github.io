@@ -14,7 +14,7 @@ const compiled=await build({entryPoints:['src/runtime.js'],bundle:true,write:fal
 }]});
 const bundle={enabled:true,revision:'test',deployment:{clientId:'00000000-0000-0000-0000-000000000001',tenantId:'00000000-0000-0000-0000-000000000002'},branding:JSON.parse(await readFile('branding.json','utf8')),templates:{full:await readFile('templates/full.html','utf8')},assets:{ark:{filename:'ark.png',base64:'eA=='},artesian:{filename:'artesian.png',base64:'eA=='}}};
 
-function runtime({persistent=false,senderAddress='alex@ark-energy.eu',proxyAddresses=[],platform='Mac'}={}) {
+function runtime({persistent=false,senderAddress='alex@ark-energy.eu',proxyAddresses=[],platform='Mac',sessionFailure,signatureFailure}={}) {
   const calls={requests:[],sets:[],warnings:[],details:[],clears:0,completed:0,graph:0,popups:0,attachments:0};
   const handlers={};
   const mailboxProfile={emailAddress:'alex@ark-energy.eu',displayName:'Alex Example'};
@@ -24,9 +24,11 @@ function runtime({persistent=false,senderAddress='alex@ark-energy.eu',proxyAddre
   if (['Android','iOS'].includes(platform)) {
     const session=new Map();
     item.getAttachmentsAsync=()=>assert.fail('Unsupported mobile API');item.body.getTypeAsync=()=>assert.fail('Unsupported mobile API');
-    item.sessionData={getAsync:(key,cb)=>ok(cb,session.get(key)),setAsync:(key,value,cb)=>{session.set(key,value);ok(cb);}};
+    // null models a failed callback with no error code; undefined keeps normal reads.
+    item.sessionData={getAsync:(key,cb)=>sessionFailure!==undefined?cb({status:'failed',error:sessionFailure===null?{}:{code:sessionFailure}}):session.has(key)?ok(cb,session.get(key)):cb({status:'failed',error:{code:9050}}),setAsync:(key,value,cb)=>{session.set(key,value);ok(cb);}};
     item.addFileAttachmentFromBase64Async=(_bytes,_name,_options,cb)=>{calls.attachments++;ok(cb,'attachment');};
   }
+  if(signatureFailure) item.body.setSignatureAsync=(_html,_options,cb)=>cb({status:'failed',error:{code:signatureFailure}});
   runInNewContext(compiled.outputFiles[0].text,{URL,clearTimeout,setTimeout:(fn,ms)=>setTimeout(fn,ms===1000?0:ms),console:{warn:text=>calls.details.push(text)},Office:{onReady(){},actions:{associate:(name,handler)=>{handlers[name]=handler;}},context:{platform,requirements:{isSetSupported:()=>true},mailbox:{item,userProfile:mailboxProfile}}},fixtures:{bundle,
     create:async()=>({acquireTokenSilent:async request=>{calls.requests.push(request);if(persistent||calls.requests.length===1)throw Object.assign(new Error('PRIVATE_PROVIDER_PAYLOAD'),{errorCode:'7000024'});return {accessToken:'SYNTHETIC_TOKEN',account:{tenantId:bundle.deployment.tenantId}};},acquireTokenPopup:()=>{calls.popups++;assert.fail('No background popup');}}),
     graph:async()=>{calls.graph++;return {displayName:mailboxProfile.displayName,mail:mailboxProfile.emailAddress,jobTitle:'Director',businessPhones:['+353 83 111 2222'],proxyAddresses};}
@@ -60,6 +62,26 @@ test('mobile authentication failure directs recovery to a received message',asyn
   const {run,calls}=runtime({platform:'Android',persistent:true});await run();
   assert.equal(calls.sets.length,0);assert.equal(calls.attachments,0);assert.equal(calls.completed,1);
   assert.ok(calls.warnings[0].includes('received email'));assert.equal(calls.popups,0);
+});
+test('mobile Office failures expose a short numeric support reference without provider payloads',async()=>{
+  for(const [options,reference] of [
+    [{sessionFailure:9051},'session-read/OUTLOOK_9051'],
+    [{signatureFailure:5001},'signature-write/OUTLOOK_5001'],
+    [{signatureFailure:9999999999},'signature-write/OUTLOOK_9999999999'],
+    [{sessionFailure:null},'session-read'],
+    [{sessionFailure:'SECRET_EMPLOYEE_ADDRESS'},'session-read']
+  ]) {
+    const {run,calls}=runtime({platform:'Android',...options});await run();
+    assert.equal(calls.sets.length,0);assert.equal(calls.completed,1);assert.equal(calls.warnings.length,1);
+    assert.ok(calls.warnings[0].includes('('+reference+')'));
+    assert.ok(calls.warnings[0].includes('share this reference with IT'));
+    if(options.sessionFailure===null) {
+      assert.equal(calls.warnings[0].includes('OUTLOOK_FAILED'),false);
+      assert.ok(calls.details[0].includes('Result: OUTLOOK_FAILED'));
+    }
+    assert.ok(calls.warnings[0].length<=150);assert.ok(calls.details[0].includes('Step: '));
+    assert.equal((calls.warnings.join()+calls.details.join()).includes('SECRET_'),false);
+  }
 });
 
 test('repeated broker failure preserves the signature and logs only safe support references',async()=>{

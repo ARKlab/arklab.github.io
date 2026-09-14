@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.2 — Missing mobile marker recovery and diagnostics
+
+A new mobile draft could stop before its first logo upload when `sessionData.getAsync` returned Outlook's `KeyNotFound` code 9050. The marker is expected to be absent until insertion succeeds, but the previous flow treated that response as fatal.
+
+- Treat only code 9050 from the mobile marker read as an absent marker. Continue to stop on other read errors and on all marker-write, attachment and signature-write failures.
+- Update mobile test fixtures to return the missing-key error, including the compiled runtime and real generated production assets. Retain successful empty-return compatibility, repeated-insertion reuse, timeout handling and the per-item queue.
+- Tag failing Office operations and expose allowlisted step names and numeric codes in mobile notifications and support details. Do not display provider messages, tokens, employee data or arbitrary symbolic error codes.
+
+The regression reproduces `OUTLOOK_9050` against 1.1.1. This is a code defect consistent with the reported Android refresh message; the phone's actual failing code has not yet been collected, so successful device insertion still needs confirmation. Microsoft's current Android SDK maps 9050 to `KeyNotFound` ([public SDK](https://appsforoffice.microsoft.com/lib/1/hosted/outlook-android-16.00.debug.js)).
+
+The manifest remains **1.1.0.0**. This is a Pages code update, with the same signature design, permissions and assignments, and requires no additional Microsoft 365 manifest update.
+
 ## 1.1.1 — Mobile insertion reliability
 
 Fix mobile logo duplication after a local timeout and when compose/From-change handlers overlap in the same runtime.

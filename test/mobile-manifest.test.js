@@ -18,7 +18,7 @@ test('generated production assets insert and are reused through mobile session d
   const item={
     from:{getAsync:cb=>ok(cb,{emailAddress:'test@ark-energy.eu'})},
     getComposeTypeAsync:cb=>ok(cb,{composeType:'newMail'}),
-    sessionData:{getAsync:(key,cb)=>ok(cb,session.get(key)),setAsync:(key,value,cb)=>{session.set(key,value);ok(cb);}},
+    sessionData:{getAsync:(key,cb)=>session.has(key)?ok(cb,session.get(key)):cb({status:'failed',error:{code:9050}}),setAsync:(key,value,cb)=>{session.set(key,value);ok(cb);}},
     addFileAttachmentFromBase64Async:(bytes,name,options,cb)=>{attachments.push({bytes,name,options});ok(cb,name);},
     body:{setSignatureAsync:(html,options,cb)=>{signatures.push({html,options});ok(cb);}}
   };
