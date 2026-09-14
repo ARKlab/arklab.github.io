@@ -1,4 +1,5 @@
 import {profileForSender,renderSignature,plainSignature} from './render.js';
+import {isMobileOutlook} from './platform.js';
 
 export function officeCall(object, method, ...args) {
   return new Promise((resolve,reject)=>{
@@ -9,7 +10,7 @@ export function officeCall(object, method, ...args) {
 
 function checkActive(context) { if (context.cancelled) throw new Error('CANCELLED'); }
 
-export async function applySignature({item,bundle,getGraph,context={cancelled:false}}) {
+export async function applySignature({item,bundle,getGraph,context={cancelled:false},mobile=isMobileOutlook()}) {
   if (!bundle.enabled) return {status:'paused'};
   const sender=await officeCall(item.from,'getAsync');
   const graph=await getGraph();
@@ -17,19 +18,29 @@ export async function applySignature({item,bundle,getGraph,context={cancelled:fa
   const profile=profileForSender(graph,sender,bundle.branding);
   const compose=await officeCall(item,'getComposeTypeAsync');
   const compact=bundle.branding.compactReplies && ['reply','forward'].includes(compose.composeType);
-  const bodyType=await officeCall(item.body,'getTypeAsync');
+  // Mobile supports HTML signatures, but not body.getTypeAsync.
+  const bodyType=mobile?'html':await officeCall(item.body,'getTypeAsync');
   const isText=String(bodyType).toLowerCase()==='text';
   // Prepare/validate before adding any attachments.
   const signature=isText?plainSignature(bundle,profile,compact):renderSignature(bundle,profile,{compact,officeCss:true});
   checkActive(context);
   let existing=[];
   if (!isText && !compact) {
-    existing=await officeCall(item,'getAttachmentsAsync');
+    if (mobile) {
+      // Mobile cannot enumerate attachments. Per-item session markers survive
+      // successive compose/From-change events without storing any user data.
+      if (typeof item.sessionData?.getAsync!=='function' || typeof item.sessionData?.setAsync!=='function') throw new Error('OUTLOOK_UPDATE_REQUIRED');
+    } else existing=await officeCall(item,'getAttachmentsAsync');
     for (const asset of Object.values(bundle.assets)) {
       if (!signature.includes('cid:'+asset.filename)) continue;
       checkActive(context);
-      if (!existing.some(a=>a.name===asset.filename && a.isInline)) {
+      const key='ark-signature-image:'+asset.filename;
+      const attached=mobile ? await officeCall(item.sessionData,'getAsync',key)==='added' : existing.some(a=>a.name===asset.filename && a.isInline);
+      checkActive(context);
+      if (!attached) {
         await officeCall(item,'addFileAttachmentFromBase64Async',asset.base64,asset.filename,{isInline:true});
+        checkActive(context);
+        if (mobile) await officeCall(item.sessionData,'setAsync',key,'added');
       }
     }
   }

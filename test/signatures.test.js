@@ -10,7 +10,7 @@ const bundle={enabled:true,branding,revision:'test123',assets:{ark:{filename:'ar
 const graph={displayName:'Alex Example',mail:'alex@ark-energy.eu',userPrincipalName:'alex@ark-energy.eu',jobTitle:'Director',businessPhones:['+353 83 111 2222'],mobilePhone:'+39 333 111 2222',officeLocation:'Dublin'};
 const sender={displayName:'Alex Example',emailAddress:'alex@ark-energy.eu'};
 
-function fakeItem({composeType='newMail',bodyType='html',existing=[]}={}) {
+function fakeItem({composeType='newMail',bodyType='html',existing=[],mobile=false}={}) {
   const state={sets:[],attachments:[],from:sender,fromReads:0};
   const ok=(cb,value)=>cb({status:'succeeded',value});
   const item={
@@ -20,8 +20,69 @@ function fakeItem({composeType='newMail',bodyType='html',existing=[]}={}) {
     addFileAttachmentFromBase64Async:(bytes,name,options,cb)=>{state.attachments.push({bytes,name,options});ok(cb,name);},
     body:{getTypeAsync:cb=>ok(cb,bodyType),setSignatureAsync:(html,options,cb)=>{state.sets.push({html,options});ok(cb);}}
   };
+  if (mobile) {
+    state.session=new Map();
+    item.getAttachmentsAsync=()=>assert.fail('Mobile must not enumerate attachments');
+    item.body.getTypeAsync=()=>assert.fail('Mobile must not request the body format');
+    item.sessionData={getAsync:(key,cb)=>ok(cb,state.session.get(key)),setAsync:(key,value,cb)=>{state.session.set(key,value);ok(cb);}};
+  }
   return {item,state};
 }
+
+test('mobile full signatures reuse inline logos across repeated insertion and an alias switch',async()=>{
+  const {item,state}=fakeItem({mobile:true});
+  const getGraph=async()=>({...graph,proxyAddresses:['smtp:alex@ark-energy.it']});
+  await applySignature({item,bundle,getGraph,mobile:true});
+  state.from={...sender,emailAddress:'alex@ark-energy.it'};
+  await applySignature({item,bundle,getGraph,mobile:true});
+  assert.equal(state.attachments.length,2);assert.equal(state.sets.length,2);
+  assert.ok(state.attachments.every(a=>a.options.isInline));
+  assert.ok(state.sets.every(s=>s.options.coercionType==='html'&&s.html.includes('Director')&&s.html.includes('cid:ark-test.png')));
+  assert.ok(state.sets[1].html.includes('mailto:alex@ark-energy.it'));
+  assert.ok(!state.sets[1].html.includes('mailto:alex@ark-energy.eu'));
+  assert.deepEqual([...state.session.values()],['added','added']);
+  assert.ok([...state.session.keys()].every(key=>!key.includes('@')));
+});
+test('mobile replies and forwards use compact HTML without attachment or session APIs',async()=>{
+  for (const composeType of ['reply','forward']) {
+    const {item,state}=fakeItem({mobile:true,composeType});delete item.sessionData;
+    await applySignature({item,bundle,getGraph:async()=>graph,mobile:true});
+    assert.equal(state.attachments.length,0);
+    assert.ok(!state.sets[0].html.includes('<img'));
+    assert.ok(state.sets[0].html.includes('Home of'));
+  }
+});
+test('mobile session markers are isolated to each draft',async()=>{
+  for (let index=0;index<2;index++) {
+    const {item,state}=fakeItem({mobile:true});
+    await applySignature({item,bundle,getGraph:async()=>graph,mobile:true});
+    assert.equal(state.attachments.length,2);
+  }
+});
+test('mobile retry after partial attachment failure reuses the successful logo',async()=>{
+  const {item,state}=fakeItem({mobile:true});const attach=item.addFileAttachmentFromBase64Async;
+  item.addFileAttachmentFromBase64Async=(bytes,name,options,cb)=>name==='artesian-test.png'?cb({status:'failed',error:{code:'UPLOAD'}}):attach(bytes,name,options,cb);
+  await assert.rejects(applySignature({item,bundle,getGraph:async()=>graph,mobile:true}),/OUTLOOK_UPLOAD/);
+  assert.equal(state.sets.length,0);assert.equal(state.attachments.length,1);
+  item.addFileAttachmentFromBase64Async=attach;
+  await applySignature({item,bundle,getGraph:async()=>graph,mobile:true});
+  assert.equal(state.attachments.length,2);assert.equal(state.sets.length,1);
+});
+test('missing or failed mobile session APIs preserve the current signature',async()=>{
+  for (const unavailable of [true,false]) {
+    const {item,state}=fakeItem({mobile:true});
+    if (unavailable) delete item.sessionData;
+    else item.sessionData.getAsync=(_key,cb)=>cb({status:'failed',error:{code:'SESSION'}});
+    await assert.rejects(applySignature({item,bundle,getGraph:async()=>graph,mobile:true}),unavailable?/OUTLOOK_UPDATE_REQUIRED/:/OUTLOOK_SESSION/);
+    assert.equal(state.sets.length,0);assert.equal(state.attachments.length,0);
+  }
+});
+test('cancellation during mobile session retrieval cannot add logos or insert later',async()=>{
+  const {item,state}=fakeItem({mobile:true});const context={cancelled:false};
+  item.sessionData.getAsync=(_key,cb)=>{context.cancelled=true;cb({status:'succeeded'});};
+  await assert.rejects(applySignature({item,bundle,getGraph:async()=>graph,mobile:true,context}),/CANCELLED/);
+  assert.equal(state.sets.length,0);assert.equal(state.attachments.length,0);
+});
 test('directory fields are escaped and public mobile numbers are opt-in',()=>{
   const p=profileForSender({...graph,displayName:'Alex <img src=x onerror=alert(1)>',jobTitle:'Research & Development'},sender,branding);
   const html=renderSignature(bundle,p);

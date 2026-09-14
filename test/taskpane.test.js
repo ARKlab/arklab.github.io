@@ -17,7 +17,7 @@ const compiled=await build({
 const bundle=JSON.parse(await readFile('branding.json','utf8'));
 const template=await readFile('templates/full.html','utf8');
 
-function panel({needsConsent=false,brokerFailure=false,settingsFailure=false,applyFailure=false,legacyMarkup=false}={}) {
+function panel({needsConsent=false,brokerFailure=false,settingsFailure=false,applyFailure=false,legacyMarkup=false,mobile=false}={}) {
   const elements=Object.fromEntries(['status','connect','apply','signature','support','diagnostics'].map(id=>[id,{
     disabled:true,textContent:'',innerHTML:'',handlers:{},
     addEventListener(event,handler){this.handlers[event]=handler;}
@@ -28,7 +28,7 @@ function panel({needsConsent=false,brokerFailure=false,settingsFailure=false,app
   const email='alex@ark-energy.eu';
   runInNewContext(compiled.outputFiles[0].text,{
     document:{getElementById:id=>legacyMarkup&&['support','diagnostics'].includes(id)?null:elements[id]},
-    Office:{onReady:handler=>{ready=handler;},context:{mailbox:{userProfile:{emailAddress:email},item:{from:{getAsync:callback=>callback({status:'succeeded',value:{emailAddress:email}})},body:{setSignatureAsync(){assert.fail('Opening a preview must not insert a signature.');}}}}}},
+    Office:{onReady:handler=>{ready=handler;},context:{platform:mobile?'Android':'Mac',mailbox:{userProfile:{emailAddress:email},item:{from:mobile?{emailAddress:'received-from@example.org',displayName:'Received sender'}:{getAsync:callback=>callback({status:'succeeded',value:{emailAddress:email}})},body:{setSignatureAsync(){assert.fail('Opening a preview must not insert a signature.');}}}}}},
     URL,fixtures:{
       fetchBundle(){if(settingsFailure&&fetchCount++===0) throw Object.assign(new Error('REQUEST_NETWORK_ERROR'),{stage:'settings'});return this.bundle;},
       bundle:{enabled:true,deployment:{},branding:bundle,revision:'panel-test',templates:{full:template},assets:{ark:{base64:'eA=='},artesian:{base64:'eA=='}}},
@@ -53,6 +53,24 @@ test('opening the panel uses Outlook SSO without an interactive prompt or insert
   assert.ok(elements.signature.innerHTML.includes('Alex Example'));
   assert.equal(elements.connect.textContent,'Refresh preview');
   assert.equal(elements.apply.disabled,false);
+});
+
+test('mobile read pane previews the mailbox owner and never offers received-message insertion',async()=>{
+  const {elements,calls,ready}=panel({mobile:true});
+  await ready();
+  assert.equal(calls[0].interactive,false);assert.equal(calls[0].loginHint,'alex@ark-energy.eu');
+  assert.ok(elements.signature.innerHTML.includes('Alex Example'));
+  assert.ok(!elements.signature.innerHTML.includes('received-from'));
+  assert.equal(elements.apply.hidden,true);assert.equal(elements.apply.disabled,true);
+  assert.ok(elements.status.textContent.includes('start a new message'));
+  await elements.apply.handlers.click();assert.equal(calls.length,1);
+});
+test('mobile read pane completes required consent only after an explicit click',async()=>{
+  const {elements,calls,ready}=panel({mobile:true,needsConsent:true});
+  await ready();assert.equal(calls[0].interactive,false);
+  await elements.connect.handlers.click();assert.equal(calls[1].interactive,true);
+  assert.equal(elements.apply.hidden,true);assert.equal(elements.apply.disabled,true);
+  assert.ok(elements.status.textContent.includes('Connected.'));
 });
 
 test('missing consent waits for an explicit click before requesting interaction',async()=>{

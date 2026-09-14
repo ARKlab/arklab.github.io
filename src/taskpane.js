@@ -3,6 +3,7 @@ import {graphProfile,isConfigured} from './auth.js';
 import {profileForSender,renderSignature} from './render.js';
 import {applySignature,officeCall} from './office-flow.js';
 import {errorText,supportDetails} from './errors.js';
+import {isMobileOutlook} from './platform.js';
 
 const status=document.getElementById('status');
 const connect=document.getElementById('connect');
@@ -27,7 +28,12 @@ function showError(error) {
   if(support) support.hidden=false;
 }
 // Opening the panel may reuse Outlook's session, but must never launch a sign-in popup.
-Office.onReady(()=>previewSignature(false));
+Office.onReady(()=>{
+  // Mobile exposes the pane while reading an email, not in compose mode.
+  // Never offer to modify the received message that opened this pane.
+  apply.hidden=isMobileOutlook();
+  return previewSignature(false);
+});
 async function previewSignature(interactive) {
   connect.disabled=true; apply.disabled=true;
   say('Loading your profile using your Outlook sign-in…');
@@ -41,13 +47,14 @@ async function previewSignature(interactive) {
     document.getElementById('signature').innerHTML=renderSignature(bundle,profile,{images:'preview'});
     connect.textContent='Refresh preview';
     recover=false;
-    apply.disabled=!bundle.enabled || !item?.body?.setSignatureAsync;
-    say(bundle.enabled?'Connected. Your signature uses the current company template.':'Connected. Automatic insertion is paused by your administrator.');
+    apply.disabled=isMobileOutlook() || !bundle.enabled || !item?.body?.setSignatureAsync;
+    say(!bundle.enabled?'Connected. Automatic insertion is paused by your administrator.':isMobileOutlook()?'Connected. Close this panel and start a new message, reply or forward. Your signature is added automatically; expand a quick reply to see it.':'Connected. Your signature uses the current company template.');
   }catch(error){showError(error);}
   finally{connect.disabled=false;}
 }
 connect.addEventListener('click',()=>previewSignature(true));
 apply.addEventListener('click',async()=>{
+  if (isMobileOutlook()) return;
   apply.disabled=true;connect.disabled=true;
   try {
     bundle=await fetchBundle(__SITE_URL__);
