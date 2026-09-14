@@ -44,16 +44,19 @@ The repository name `ARKlab/arklab.github.io` serves the add-in at the origin ro
 npm ci
 npm test
 npm run build
+npm run validate:manifest
 npm run serve
 ```
 
 The local preview is at `http://127.0.0.1:8766`. Outlook installation uses the published HTTPS site. `npm run validate:manifest` validates the built manifest; `npm run check:deployment` checks the published resources.
 
+CI runs the manifest validator after the build on pull requests and before Pages publication. Validation uses Microsoft's online service; rejection, a service failure or the five-minute timeout fails the build and prevents publication.
+
 ## Supported scope and limitations
 
 - Desktop targets are current Microsoft 365 Outlook on Mac, Windows (new and classic) and the web. The manifest retains Mailbox 1.13 and the code checks NestedAppAuth 1.1. Older clients need updating.
 - Mobile implementation targets Microsoft 365 Outlook on Android 4.2502.0 or later. The XML mobile declaration also enables iOS; real-device acceptance on both platforms is tracked separately. Mobile uses supported API exceptions without calling desktop-only body-format or attachment-list methods.
-- Shared-mailbox activation is enabled for supported desktop setups, including Mac and separately opened web/Windows mailboxes. The add-in remains assigned to employees' primary mailboxes. Real shared-mailbox acceptance is pending; see [setup and limitations](docs/SHARED-MAILBOXES.md).
+- Shared-mailbox activation is enabled for Microsoft's supported setups: delegated access on Mac/classic Windows, **Open another mailbox** on the web, and promoted shared mailboxes in new Windows. The add-in remains assigned to employees' primary mailboxes. Real shared-mailbox acceptance is pending; see [setup, source and limitations](docs/SHARED-MAILBOXES.md).
 - Outlook on Android and iOS does not support shared-mailbox add-ins. Apple Mail as a sender and centrally enforced signatures at the mail server are also outside this release.
 - A sending address matching the signed-in user's primary address, sign-in address or directory SMTP alias receives that user's name, title and phone numbers, with the selected From address as its email link. An unverified address in an approved company domain receives only its Outlook display name and email. Other domains are skipped and a notice is shown. Verify sender switching before rollout.
 - If authentication or the service is unavailable, the current signature is kept and a retry notice is shown. Maintain a local signature fallback if service availability is important.
