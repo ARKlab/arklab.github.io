@@ -1,12 +1,14 @@
 # Outlook for Android setup and acceptance
 
-Version 1.1.0 implements mobile support. Automated checks and XML validation pass; real-phone acceptance is pending. The reported test client is Outlook for Android **5.2630.0 (72630118)**.
+Version 1.1.0 implements mobile support; version 1.1.1 fixes timeout and overlapping-insertion recovery using the same manifest. Automated checks and XML validation pass; real-phone acceptance is pending. The reported test client is Outlook for Android **5.2630.0 (72630118)**.
 
 ## What changes
 
 New messages get the existing full signature with embedded outlined logos. Replies and forwards get the existing compact signature. From changes rerun insertion using the same verified-alias checks. Outlook SSO still reads only the signed-in user's profile with delegated `User.Read`.
 
 The mobile path uses HTML directly because `body.getTypeAsync` is unsupported. It also avoids `getAttachmentsAsync`, which is not among the supported later mobile APIs. Successful logo attachments are recorded in per-item session data so another compose/From event can reuse them. Markers contain only asset filenames and an `added` flag; they contain no employee information or access tokens.
+
+Mobile insertions for the same item are queued within one runtime. Successful uploads are recorded even if the local deadline expired while the upload was pending; cancellation still prevents the next upload and signature write. Host termination or a failed marker write can still leave an unrecorded attachment. See [the review assessment](MOBILE-REVIEW.md).
 
 ## Publish and update Microsoft 365
 
@@ -16,6 +18,8 @@ The mobile path uses HTML directly because `body.getTypeAsync` is unsupported. I
 4. Restart Outlook on the test phone after delivery, then run the checks below. Updating the shared manifest enables mobile for all existing assigned users, not just the tester. Do not remove desktop users to narrow this test.
 
 The old desktop installation continues to use the desktop path while manifest delivery is pending. The mobile declaration also covers iOS; it does not establish that iOS has passed acceptance.
+
+The 1.1.1 correctness patch changes hosted code only; an existing 1.1.0.0 Microsoft 365 manifest does not need another update. Restart Outlook if it retains the previous runtime.
 
 ## Phone test
 

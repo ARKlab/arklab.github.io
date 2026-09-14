@@ -83,6 +83,74 @@ test('cancellation during mobile session retrieval cannot add logos or insert la
   await assert.rejects(applySignature({item,bundle,getGraph:async()=>graph,mobile:true,context}),/CANCELLED/);
   assert.equal(state.sets.length,0);assert.equal(state.attachments.length,0);
 });
+test('a mobile upload completing after timeout is recorded and reused without a late signature write',async()=>{
+  const {item,state}=fakeItem({mobile:true});const attach=item.addFileAttachmentFromBase64Async;
+  const started=Promise.withResolvers();const timedOut=Promise.withResolvers();let release;let completed=0;
+  item.addFileAttachmentFromBase64Async=(...args)=>{release=()=>attach(...args);started.resolve();};
+  const pending=completeEvent({completed:()=>{completed++;timedOut.resolve();}},context=>
+    applySignature({item,bundle,getGraph:async()=>graph,mobile:true,context}),{timeoutMs:30});
+  await started.promise;await timedOut.promise;
+  release();await pending;
+  assert.equal(completed,1);assert.equal(state.attachments.length,1);assert.equal(state.sets.length,0);
+  assert.equal(state.session.get('ark-signature-image:ark-test.png'),'added');
+  item.addFileAttachmentFromBase64Async=attach;
+  await applySignature({item,bundle,getGraph:async()=>graph,mobile:true});
+  assert.equal(state.attachments.length,2);assert.equal(state.sets.length,1);
+});
+test('overlapping mobile insertions reuse uploaded logos and finish with the latest alias',async()=>{
+  const {item,state}=fakeItem({mobile:true});const attach=item.addFileAttachmentFromBase64Async;
+  const started=Promise.withResolvers();let release;
+  item.addFileAttachmentFromBase64Async=(...args)=>{release=()=>attach(...args);started.resolve();};
+  const getGraph=async()=>({...graph,proxyAddresses:['smtp:alex@ark-energy.it']});
+  const first=applySignature({item,bundle,getGraph,mobile:true});
+  const firstRejected=assert.rejects(first,/SENDER_CHANGED/);
+  await started.promise;
+  state.from={...sender,emailAddress:'alex@ark-energy.it'};
+  const second=applySignature({item,bundle,getGraph,mobile:true});
+  item.addFileAttachmentFromBase64Async=attach;release();
+  await firstRejected;await second;
+  assert.equal(state.attachments.length,2);assert.equal(state.sets.length,1);
+  assert.ok(state.sets[0].html.includes('mailto:alex@ark-energy.it'));
+  assert.ok(!state.sets[0].html.includes('mailto:alex@ark-energy.eu'));
+});
+test('a cancelled mobile request waiting in the queue never reads or writes the draft',async()=>{
+  const {item,state}=fakeItem({mobile:true});const graphReady=Promise.withResolvers();const started=Promise.withResolvers();
+  const first=applySignature({item,bundle,mobile:true,getGraph:()=>{started.resolve();return graphReady.promise;}});
+  await started.promise;
+  const context={cancelled:false};let graphReads=0;
+  const second=applySignature({item,bundle,mobile:true,context,getGraph:async()=>{graphReads++;return graph;}});
+  const secondRejected=assert.rejects(second,/CANCELLED/);
+  context.cancelled=true;graphReady.resolve(graph);
+  await first;await secondRejected;
+  assert.equal(graphReads,0);assert.equal(state.fromReads,2);
+  assert.equal(state.attachments.length,2);assert.equal(state.sets.length,1);
+});
+test('a From change during a pending mobile signature write cannot leave the old alias last',async()=>{
+  const {item,state}=fakeItem({mobile:true});const write=item.body.setSignatureAsync;
+  const started=Promise.withResolvers();let release;
+  item.body.setSignatureAsync=(...args)=>{release=()=>write(...args);started.resolve();};
+  const getGraph=async()=>({...graph,proxyAddresses:['smtp:alex@ark-energy.it']});
+  const first=applySignature({item,bundle,mobile:true,getGraph});
+  await started.promise;
+  state.from={...sender,emailAddress:'alex@ark-energy.it'};
+  item.body.setSignatureAsync=write;
+  const second=applySignature({item,bundle,mobile:true,getGraph});
+  // The first host call is already in flight. A newer write must wait for it.
+  await new Promise(resolve=>setImmediate(resolve));release();
+  await first;await second;
+  assert.equal(state.attachments.length,2);assert.equal(state.sets.length,2);
+  assert.ok(state.sets.at(-1).html.includes('mailto:alex@ark-energy.it'));
+});
+test('mobile insertion for another draft proceeds while the first draft is waiting',async()=>{
+  const firstDraft=fakeItem({mobile:true});const otherDraft=fakeItem({mobile:true});
+  const graphReady=Promise.withResolvers();const started=Promise.withResolvers();
+  const first=applySignature({item:firstDraft.item,bundle,mobile:true,getGraph:()=>{started.resolve();return graphReady.promise;}});
+  await started.promise;
+  await applySignature({item:otherDraft.item,bundle,mobile:true,getGraph:async()=>graph});
+  assert.equal(otherDraft.state.sets.length,1);assert.equal(firstDraft.state.sets.length,0);
+  graphReady.resolve(graph);await first;
+  assert.equal(firstDraft.state.sets.length,1);
+});
 test('directory fields are escaped and public mobile numbers are opt-in',()=>{
   const p=profileForSender({...graph,displayName:'Alex <img src=x onerror=alert(1)>',jobTitle:'Research & Development'},sender,branding);
   const html=renderSignature(bundle,p);

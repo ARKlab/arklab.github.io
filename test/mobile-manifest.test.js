@@ -3,12 +3,39 @@ import assert from 'node:assert/strict';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {readFile} from 'node:fs/promises';
+import {applySignature} from '../src/office-flow.js';
 
 // Exercise the generated artifact: a correct handler alone does not enable
 // mobile deployment. Full XML schema validation is a separate release check.
 await promisify(execFile)(process.execPath,['scripts/build.mjs']);
 const manifest=await readFile('dist/manifest.xml','utf8');
 const section=name=>manifest.match(new RegExp(`<${name}>([\\s\\S]*?)</${name}>`))?.[1];
+
+test('generated production assets insert and are reused through mobile session data',async()=>{
+  const bundle=JSON.parse(await readFile('dist/signature-bundle.json','utf8'));
+  const session=new Map();const attachments=[];const signatures=[];
+  const ok=(cb,value)=>cb({status:'succeeded',value});
+  const item={
+    from:{getAsync:cb=>ok(cb,{emailAddress:'test@ark-energy.eu'})},
+    getComposeTypeAsync:cb=>ok(cb,{composeType:'newMail'}),
+    sessionData:{getAsync:(key,cb)=>ok(cb,session.get(key)),setAsync:(key,value,cb)=>{session.set(key,value);ok(cb);}},
+    addFileAttachmentFromBase64Async:(bytes,name,options,cb)=>{attachments.push({bytes,name,options});ok(cb,name);},
+    body:{setSignatureAsync:(html,options,cb)=>{signatures.push({html,options});ok(cb);}}
+  };
+  const getGraph=async()=>({mail:'test@ark-energy.eu',displayName:'Test Employee'});
+  await applySignature({item,bundle,mobile:true,getGraph});
+  await applySignature({item,bundle,mobile:true,getGraph});
+  assert.equal(attachments.length,2);assert.equal(signatures.length,2);
+  for(const asset of Object.values(bundle.assets)) {
+    assert.match(asset.filename,/^ark-signatures-(ark|artesian)-[a-f0-9]{12}\.png$/);
+    assert.equal(session.get('ark-signature-image:'+asset.filename),'added');
+    assert.ok(signatures.every(s=>s.html.includes('cid:'+asset.filename)&&s.options.coercionType==='html'));
+    assert.ok(attachments.some(a=>a.name===asset.filename&&a.bytes===asset.base64&&a.options.isInline));
+  }
+  // Microsoft documents a total-object limit for SessionData, not the
+  // notification API's 32-char key limit. Exercise real production sizes.
+  assert.ok(JSON.stringify(Object.fromEntries(session)).length<50000);
+});
 
 test('generated mobile manifest connects both compose events to the hosted runtime',async()=>{
   const mobile=section('MobileFormFactor');assert.ok(mobile);

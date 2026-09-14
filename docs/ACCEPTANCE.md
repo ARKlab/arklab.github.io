@@ -10,7 +10,7 @@ On 11 September 2026, the owner approved using the outlined trial logos as the s
 
 Version 1.0.4 passes 56 automated tests. It adds `ark-energy.it` to the approved domains and recognises SMTP aliases from the signed-in user's directory profile. Fixtures verify the selected alias in full, compact and plain-text signatures, retained owner contact details, safe handling of unverified addresses and automatic insertion after a From change. On 14 September, the owner confirmed the reported alias works after publication; separate reply/forward and other-client alias checks remain pending.
 
-Version 1.1.0 passes 68 automated checks and Microsoft's manifest validation. Mobile device acceptance is pending. Track Android installation, SSO, event delivery and visual checks in [ANDROID-SETUP.md](ANDROID-SETUP.md). The same mobile declaration includes iOS, which requires separate device testing.
+Version 1.1.1 has 74 automated checks, including timeout and overlapping-event regressions. It retains the previously validated manifest 1.1.0.0. Mobile device acceptance is pending. Track Android installation, SSO, event delivery and visual checks in [ANDROID-SETUP.md](ANDROID-SETUP.md). The same mobile declaration includes iOS, which requires separate device testing. See [the PR #12 review assessment](MOBILE-REVIEW.md) for the findings and limits of the patch.
 
 | Scenario | Expected result | Result |
 |---|---|---|
