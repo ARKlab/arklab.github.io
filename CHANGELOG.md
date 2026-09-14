@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.1.1 — Mobile insertion reliability
+
+Fix mobile logo duplication after a local timeout and when compose/From-change handlers overlap in the same runtime.
+
+- Record an attachment that already succeeded before checking cancellation, while preventing further uploads or signature writes after cancellation.
+- Queue mobile insertions per item, so a pending older write cannot finish after a newer sender's write. A failed operation releases the queue; a queued request whose deadline expired stops before accessing the draft. Other drafts and the desktop path are independent.
+- Test real generated logo filenames and attachment bytes, timeout recovery, concurrent updates, queued cancellation and independent drafts. Four regression scenarios fail against the previous merged code and pass with this patch.
+
+See [the review assessment](docs/MOBILE-REVIEW.md) for the evidence on each Copilot finding, including why the claimed session-data key limit and icon deployment failure are not established by Microsoft's references. A hard host shutdown can still interrupt a marker write; the queue applies within one runtime. Real Android and iOS acceptance remains pending.
+
+The manifest stays **1.1.0.0**, with the same signature artwork, permissions and assigned users. This patch requires Pages publication but no additional Microsoft 365 manifest update.
+
 ## 1.1.0 — Android acceptance candidate
 
 Extend the add-in to Outlook mobile. Real Android deployment, SSO and sent-message checks remain pending; iOS is enabled by the same XML mobile declaration but is also unverified on a device.

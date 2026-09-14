@@ -10,7 +10,21 @@ export function officeCall(object, method, ...args) {
 
 function checkActive(context) { if (context.cancelled) throw new Error('CANCELLED'); }
 
+// Compose and From-change events can overlap in the same mobile runtime.
+// Keep each item's upload/marker/write sequence ordered; other drafts proceed
+// independently. This is not a lock across separate host runtimes.
+const mobileInsertions=new WeakMap();
 export async function applySignature({item,bundle,getGraph,context={cancelled:false},mobile=isMobileOutlook()}) {
+  const insert=()=>insertSignature({item,bundle,getGraph,context,mobile});
+  if (!mobile) return insert();
+  const previous=mobileInsertions.get(item)||Promise.resolve();
+  const pending=previous.catch(()=>{}).then(()=>{checkActive(context);return insert();});
+  mobileInsertions.set(item,pending);
+  try {return await pending;}
+  finally {if(mobileInsertions.get(item)===pending) mobileInsertions.delete(item);}
+}
+
+async function insertSignature({item,bundle,getGraph,context,mobile}) {
   if (!bundle.enabled) return {status:'paused'};
   const sender=await officeCall(item.from,'getAsync');
   const graph=await getGraph();
@@ -39,8 +53,11 @@ export async function applySignature({item,bundle,getGraph,context={cancelled:fa
       checkActive(context);
       if (!attached) {
         await officeCall(item,'addFileAttachmentFromBase64Async',asset.base64,asset.filename,{isInline:true});
-        checkActive(context);
+        // Record an upload that already succeeded even if our deadline expired
+        // while it was in flight. Never start another upload or signature write
+        // after cancellation. A host shutdown can still interrupt this marker.
         if (mobile) await officeCall(item.sessionData,'setAsync',key,'added');
+        checkActive(context);
       }
     }
   }
