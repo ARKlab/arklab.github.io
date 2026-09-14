@@ -12,6 +12,8 @@ Version 1.0.4 passes 56 automated tests. It adds `ark-energy.it` to the approved
 
 Version 1.1.2 has 80 automated checks, including missing-marker recovery, safe error references, timeout and overlapping-event regressions. It retains the previously validated manifest 1.1.0.0. Android add-in delivery has been reported, but the user sees a generic refresh failure; its actual error code and successful insertion still need device verification. Track Android installation, SSO, event delivery and visual checks in [ANDROID-SETUP.md](ANDROID-SETUP.md). The same mobile declaration includes iOS, which requires separate device testing. See [the PR #12 review assessment](MOBILE-REVIEW.md) for the earlier findings and limits.
 
+Version 1.2.0 has 84 automated checks and introduces manifest 1.2.0.0 with desktop shared-mailbox activation. On 14 September, the owner reported no signature when opening shared mailboxes separately on Mac, Windows and mobile. Automated checks cover the manifest setting, shared-sender full/compact insertion, preview and return to the personal sender. Real Mac/Windows/shared-web verification remains pending after the Microsoft 365 manifest update; mobile shared mailboxes are unsupported by Outlook. Track this in [SHARED-MAILBOXES.md](SHARED-MAILBOXES.md).
+
 | Scenario | Expected result | Result |
 |---|---|---|
 | Admin assignment | Saved deployment targets the approved user list | Last verified assignment: three named users, 9 September 2026. A wider employee list is being prepared for owner review before any assignment change; membership is recorded internally |

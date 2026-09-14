@@ -48,6 +48,14 @@ test('generated mobile manifest connects both compose events to the hosted runti
   const js=await readFile('dist/runtime.js','utf8');
   assert.ok(js.includes('arkOnCompose'));assert.ok(js.includes('arkOnFromChanged'));
 });
+test('shared mailbox opt-in is declared only on the desktop form factor before its commands',()=>{
+  const desktop=section('DesktopFormFactor');
+  assert.ok(desktop.trimStart().startsWith('<SupportsSharedFolders>true</SupportsSharedFolders>'));
+  assert.equal((manifest.match(/<SupportsSharedFolders>/g)||[]).length,1);
+  assert.ok(!section('MobileFormFactor').includes('SupportsSharedFolders'));
+  assert.ok(manifest.includes('xsi:type="VersionOverridesV1_1"'));
+  assert.ok(manifest.includes('<bt:Sets DefaultMinVersion="1.13">'));
+});
 test('mobile recovery command has nine icon variants and keeps desktop surfaces and permissions',()=>{
   const mobile=section('MobileFormFactor');
   assert.ok(mobile.includes('xsi:type="MobileMessageReadCommandSurface"'));
@@ -58,7 +66,7 @@ test('mobile recovery command has nine icon variants and keeps desktop surfaces 
   const desktop=section('DesktopFormFactor');
   for (const surface of ['MessageReadCommandSurface','MessageComposeCommandSurface','LaunchEvent']) assert.ok(desktop.includes(`xsi:type="${surface}"`));
   assert.ok(desktop.includes('FunctionName="arkOnCompose"'));assert.ok(desktop.includes('FunctionName="arkOnFromChanged"'));
-  assert.ok(manifest.includes('<Id>f0276772-c58a-4917-a7c5-b0d205b1c8d2</Id><Version>1.1.0.0</Version>'));
+  assert.ok(manifest.includes('<Id>f0276772-c58a-4917-a7c5-b0d205b1c8d2</Id><Version>1.2.0.0</Version>'));
   assert.ok(manifest.includes('<Permissions>ReadWriteItem</Permissions>'));
   assert.ok(!manifest.includes('ReadWriteMailbox'));
 });

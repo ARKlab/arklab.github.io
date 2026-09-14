@@ -1,8 +1,8 @@
 # Administrator setup
 
-Package v1.1.0 adds mobile support for Android acceptance testing. The owner accepted the end of the desktop deployment pilot on 9 September 2026 and standardised the outlined logos on 11 September. Publishing GitHub Pages or creating a GitHub release does not register, install or assign the Microsoft 365 add-in.
+Package v1.2.0 adds shared-mailbox activation for supported desktop setups and retains the mobile implementation introduced in v1.1.0. The owner accepted the end of the desktop deployment pilot on 9 September 2026 and standardised the outlined logos on 11 September. Publishing GitHub Pages or creating a GitHub release does not register, install or assign the Microsoft 365 add-in.
 
-**Mobile upgrade:** after Pages publication, update the existing Microsoft 365 add-in with manifest **1.1.0.0**. Its app ID, Graph permission and assigned employees remain the same. Updating this shared manifest enables mobile for the existing assigned users; it is not a user-specific pilot. Follow [Android setup and acceptance](ANDROID-SETUP.md) before announcing mobile availability.
+**Current manifest upgrade:** after Pages publication, update the existing Microsoft 365 add-in with manifest **1.2.0.0**. Its app ID, Graph permission and assigned employees remain the same. This enables shared-mailbox activation on supported desktop setups and retains personal-mailbox mobile support. Follow [shared-mailbox setup and acceptance](SHARED-MAILBOXES.md) and [Android setup and acceptance](ANDROID-SETUP.md) before announcing coverage. Mobile shared mailboxes are unsupported by Outlook.
 
 ## Hosting prerequisite
 
@@ -57,7 +57,7 @@ The published site contains application code, generic templates, branding and ap
 
 ## 4. Install or use the existing deployment
 
-In **Microsoft 365 admin center → Settings → Integrated apps**, upload the custom Outlook add-in using the published `manifest.xml`, review its requested permissions, and assign it to the approved employee list. For the existing ARK deployment, update its user assignment rather than uploading another copy.
+In **Microsoft 365 admin center → Settings → Integrated apps**, upload the custom Outlook add-in using the published `manifest.xml`, review its requested permissions, and assign it to the approved employee list. For the existing ARK deployment, update the existing app's manifest when upgrading features, or its user assignment when changing membership; do not upload another copy.
 
 The manifest uses the XML add-in format to support Mac as well as Windows and web Outlook. Its Office permission is **ReadWriteItem**: the ability to update the current message and attach the two small logo images. The code changes only the signature slot; it never sends messages. An administrator must review the real consent screens before installation.
 
@@ -94,4 +94,4 @@ The wider employee assignment is a separate administrative action. The owner req
 
 Version 1.0.2 retries a completed, recoverable token-acquisition failure once silently before showing the compose warning. It shares a two-attempt limit with Graph 401 recovery and allows at most 60 seconds for the overall automatic event, with shorter per-request deadlines. Background failures emit safe support references to the add-in console; pane failures expose references under **Support details**. These paths have separate runtime state, so a successful pane preview does not display the prior background exception. No tokens or employee profiles are included in those diagnostics.
 
-If **Retry connection** cannot clear a Microsoft broker sign-in rejection, fully quit and reopen Outlook. This improves recovery and diagnosis; it does not establish a permanent Microsoft-side fix. The 1.0.x patches kept manifest version `1.0.0.0`; the mobile extension requires the `1.1.0.0` update described above. Outlook may cache hosted code in an already-open session. Close existing drafts and reopen the add-in, or restart Outlook once, to establish the new baseline before testing an extended idle session.
+If **Retry connection** cannot clear a Microsoft broker sign-in rejection, fully quit and reopen Outlook. This improves recovery and diagnosis; it does not establish a permanent Microsoft-side fix. The 1.0.x patches kept manifest version `1.0.0.0`; mobile support was introduced in `1.1.0.0`, and the current shared-mailbox extension requires `1.2.0.0`. Outlook may cache hosted code in an already-open session. Close existing drafts and reopen the add-in, or restart Outlook once, to establish the new baseline before testing an extended idle session.

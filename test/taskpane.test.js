@@ -17,7 +17,7 @@ const compiled=await build({
 const bundle=JSON.parse(await readFile('branding.json','utf8'));
 const template=await readFile('templates/full.html','utf8');
 
-function panel({needsConsent=false,brokerFailure=false,settingsFailure=false,applyFailure=false,legacyMarkup=false,mobile=false}={}) {
+function panel({needsConsent=false,brokerFailure=false,settingsFailure=false,applyFailure=false,legacyMarkup=false,mobile=false,senderAddress='alex@ark-energy.eu',senderName}={}) {
   const elements=Object.fromEntries(['status','connect','apply','signature','support','diagnostics'].map(id=>[id,{
     disabled:true,textContent:'',innerHTML:'',handlers:{},
     addEventListener(event,handler){this.handlers[event]=handler;}
@@ -28,7 +28,7 @@ function panel({needsConsent=false,brokerFailure=false,settingsFailure=false,app
   const email='alex@ark-energy.eu';
   runInNewContext(compiled.outputFiles[0].text,{
     document:{getElementById:id=>legacyMarkup&&['support','diagnostics'].includes(id)?null:elements[id]},
-    Office:{onReady:handler=>{ready=handler;},context:{platform:mobile?'Android':'Mac',mailbox:{userProfile:{emailAddress:email},item:{from:mobile?{emailAddress:'received-from@example.org',displayName:'Received sender'}:{getAsync:callback=>callback({status:'succeeded',value:{emailAddress:email}})},body:{setSignatureAsync(){assert.fail('Opening a preview must not insert a signature.');}}}}}},
+    Office:{onReady:handler=>{ready=handler;},context:{platform:mobile?'Android':'Mac',mailbox:{userProfile:{emailAddress:email},item:{from:mobile?{emailAddress:'received-from@example.org',displayName:'Received sender'}:{getAsync:callback=>callback({status:'succeeded',value:{emailAddress:senderAddress,displayName:senderName}})},body:{setSignatureAsync(){assert.fail('Opening a preview must not insert a signature.');}}}}}},
     URL,fixtures:{
       fetchBundle(){if(settingsFailure&&fetchCount++===0) throw Object.assign(new Error('REQUEST_NETWORK_ERROR'),{stage:'settings'});return this.bundle;},
       bundle:{enabled:true,deployment:{},branding:bundle,revision:'panel-test',templates:{full:template},assets:{ark:{base64:'eA=='},artesian:{base64:'eA=='}}},
@@ -52,6 +52,15 @@ test('opening the panel uses Outlook SSO without an interactive prompt or insert
   assert.equal(calls[0].loginHint,'alex@ark-energy.eu');
   assert.ok(elements.signature.innerHTML.includes('Alex Example'));
   assert.equal(elements.connect.textContent,'Refresh preview');
+  assert.equal(elements.apply.disabled,false);
+});
+
+test('a shared-sender compose preview uses the mailbox name and email with the delegate sign-in hint',async()=>{
+  const {elements,calls,ready}=panel({senderAddress:'service@ark-energy.eu',senderName:'Service team'});
+  await ready();
+  assert.equal(calls.length,1);assert.equal(calls[0].loginHint,'alex@ark-energy.eu');assert.equal(calls[0].interactive,false);
+  assert.ok(elements.signature.innerHTML.includes('Service team'));assert.ok(elements.signature.innerHTML.includes('mailto:service@ark-energy.eu'));
+  assert.ok(!elements.signature.innerHTML.includes('Alex Example'));assert.ok(!elements.signature.innerHTML.includes('Director'));assert.ok(!elements.signature.innerHTML.includes('tel:'));
   assert.equal(elements.apply.disabled,false);
 });
 
