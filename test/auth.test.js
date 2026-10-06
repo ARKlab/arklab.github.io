@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {runInNewContext} from 'node:vm';
 import {build} from 'esbuild';
 
-const compiled=await build({entryPoints:['src/auth.js'],bundle:true,write:false,format:'cjs',plugins:[{
+const compiled=await build({stdin:{contents:"export * from './src/auth.js'; export {graphFailure,claimsFor} from './src/graph-error.js';",resolveDir:process.cwd()},bundle:true,write:false,format:'cjs',plugins:[{
   name:'auth-fixtures',setup(builder){
     builder.onResolve({filter:/^(@azure\/msal-browser|\.\/network\.js)$/},args=>({path:args.path,namespace:'fixture'}));
     builder.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:args.path==='@azure/msal-browser'
@@ -17,7 +17,7 @@ function service({silent,popup,graph,create,shortTimeout=false,now=()=>Date.now(
   const calls={silent:[],popup:[],graph:[],create:0};
   const token={accessToken:'PRIVATE_TOKEN',account:{tenantId:config.tenantId}};
   const module={exports:{}};
-  runInNewContext(compiled.outputFiles[0].text,{module,clearTimeout,
+  runInNewContext(compiled.outputFiles[0].text,{module,clearTimeout,atob,TextDecoder,Uint8Array,
     Date:class extends Date {static now(){return now();}},
     crypto:{randomUUID:()=> 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'},
     setTimeout:(fn,ms)=>setTimeout(()=>{if(ms===1000)onDelay();fn();},ms===1000?0:shortTimeout&&ms===15000?5:ms),
@@ -189,4 +189,79 @@ test('a token for a different tenant never reaches Graph',async()=>{
   const s=service({silent:()=>({accessToken:'PRIVATE_TOKEN',account:{tenantId:'another-tenant'}})});
   await assert.rejects(s.graphProfile(config),{message:'TENANT_MISMATCH'});
   assert.equal(s.calls.graph.length,0);
+});
+
+test('explicit reauthentication calls the interactive broker once, without another silent request',async()=>{
+  const s=service();
+  await s.graphProfile(config,{interactive:true,reauthenticate:true,loginHint:'employee@ark-energy.eu'});
+  assert.equal(s.calls.silent.length,0);
+  assert.equal(s.calls.popup.length,1);
+  assert.equal(s.calls.graph.length,1);
+  assert.equal(s.calls.popup[0].loginHint,'employee@ark-energy.eu');
+  assert.equal(s.calls.popup[0].scopes.join(','),'User.Read');
+  assert.ok(s.calls.popup[0].correlationId);
+  assert.equal(s.calls.graph[0][1].headers['client-request-id'],'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee');
+});
+
+test('reauthentication cannot open a popup without an explicit interactive request',async()=>{
+  const s=service();
+  await s.graphProfile(config,{reauthenticate:true});
+  assert.equal(s.calls.popup.length,0);
+  assert.equal(s.calls.silent.length,1);
+});
+
+test('a profile 401 after interactive sign-in stops after one Graph request',async()=>{
+  const s=service({graph:()=>{throw Object.assign(new Error('REQUEST_FAILED_401'),{httpStatus:401,graphCode:'InvalidAuthenticationToken',requestId:'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'});}});
+  await assert.rejects(s.graphProfile(config,{interactive:true,reauthenticate:true}),error=>{
+    assert.equal(error.reauthenticationRequired,true);
+    assert.equal(error.authMode,'interactive');
+    assert.equal(error.attempts,1);assert.equal(error.profileAttempts,1);
+    assert.equal(error.httpStatus,401);assert.equal(error.graphCode,'InvalidAuthenticationToken');
+    assert.ok(error.requestId);assert.ok(error.clientRequestId);
+    return true;
+  });
+  assert.equal(s.calls.silent.length,0);assert.equal(s.calls.popup.length,1);assert.equal(s.calls.graph.length,1);
+});
+
+test('interactive cancellation and broker failures never retry or request a profile',async()=>{
+  for(const code of ['user_cancelled','temporarily_unavailable','7000024']) {
+    const s=service({popup:()=>{throw Object.assign(new Error('PRIVATE_PAYLOAD'),{errorCode:code});}});
+    await assert.rejects(s.graphProfile(config,{interactive:true,reauthenticate:true}),error=>error.authMode==='interactive'&&!JSON.stringify(error).includes('PRIVATE_'));
+    assert.equal(s.calls.popup.length,1);assert.equal(s.calls.silent.length,0);assert.equal(s.calls.graph.length,0);
+  }
+});
+
+test('claims survive the fresh-token retry and an explicit sign-in, but are never serialized',async()=>{
+  const claims=JSON.stringify({access_token:{test:{essential:true,value:'PRIVATE_CLAIM'}}});
+  const s=service({graph:async()=>{throw await s.graphFailure(new Response('{}',{status:401,headers:{'www-authenticate':`Bearer error="insufficient_claims", claims="${btoa(claims)}"`}}));}});
+  let failure;
+  await assert.rejects(s.graphProfile(config,{loginHint:'employee@ark-energy.eu'}),error=>{
+    failure=error;
+    assert.equal(error.attempts,2);assert.equal(error.profileAttempts,2);
+    assert.equal(error.authMode,'silent');assert.equal(error.reauthenticationRequired,true);
+    assert.equal(s.claimsFor(error),claims);
+    assert.equal(JSON.stringify(error).includes('PRIVATE_CLAIM'),false);
+    return true;
+  });
+  assert.equal(s.calls.silent[0].claims,undefined);
+  assert.equal(s.calls.silent[1].claims,claims);
+  await assert.rejects(s.graphProfile(config,{interactive:true,reauthenticate:true,recoveryError:failure,loginHint:'employee@ark-energy.eu'}));
+  assert.equal(s.calls.popup[0].claims,claims);
+  // A different mailbox must not reuse the original mailbox's challenge.
+  await assert.rejects(s.graphProfile(config,{interactive:true,reauthenticate:true,recoveryError:failure,loginHint:'other@ark-energy.eu'}));
+  assert.equal(s.calls.popup[1].claims,undefined);
+});
+
+test('an interaction-required claims retry stays silent until a click, then carries the challenge',async()=>{
+  const claims=JSON.stringify({access_token:{acrs:{essential:true,values:['c1']}}});
+  const s=service({silent:(_request,n)=>{if(n===2) throw new InteractionRequiredAuthError();return s.token;},graph:async n=>{
+    if(n===1) throw await s.graphFailure(new Response('{}',{status:401,headers:{'www-authenticate':`Bearer error="insufficient_claims", claims="${btoa(claims)}"`}}));
+    return {ok:true};
+  }});
+  let failure;
+  await assert.rejects(s.graphProfile(config),error=>{failure=error;return error.message==='SIGN_IN_REQUIRED';});
+  assert.equal(s.calls.popup.length,0);
+  // The explicit recovery must carry the challenge to the interactive broker.
+  const recovered=await s.graphProfile(config,{interactive:true,reauthenticate:true,recoveryError:failure});
+  assert.equal(recovered.ok,true);assert.equal(s.calls.popup[0].claims,claims);
 });

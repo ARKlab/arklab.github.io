@@ -1,4 +1,5 @@
 import {signatureError} from './errors.js';
+import {graphFailure} from './graph-error.js';
 
 export async function jsonRequest(url, options={}, timeoutMs=8000) {
   let timer;
@@ -12,7 +13,11 @@ export async function jsonRequest(url, options={}, timeoutMs=8000) {
         let response;
         try {response=await fetch(url, {...options, signal:controller?.signal||options.signal,redirect:'error'});}
         catch {throw new Error('REQUEST_NETWORK_ERROR');}
-        if (!response.ok) throw new Error('REQUEST_FAILED_'+response.status);
+        if (!response.ok) {
+          const target=new URL(url);
+          if(target.origin==='https://graph.microsoft.com'&&target.pathname==='/v1.0/me') throw await graphFailure(response);
+          throw new Error('REQUEST_FAILED_'+response.status);
+        }
         try {return await response.json();}
         catch {throw new Error('REQUEST_INVALID_RESPONSE');}
       })(),

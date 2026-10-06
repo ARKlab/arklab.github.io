@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.1 — Interactive sign-in recovery and profile diagnostics
+
+A colleague's new Outlook for Windows returned `REQUEST_FAILED_401` after two token attempts while Outlook web worked. Previously, the pane could only repeat silent token acquisition; a Graph rejection did not offer an interactive sign-in and discarded Microsoft's response references. The underlying reason for that rejection remains unconfirmed.
+
+- Keep the two-attempt silent recovery budget. After a final profile 401, offer **Sign in again**. Only a user click calls the interactive broker, followed by one profile request; opening the pane and automatic composition never show a popup. Cancellation or another failure stops, with no automatic interactive retry.
+- Carry a valid, bounded Graph claims challenge into recovery in memory, bound to the same mailbox/app. Do not follow header-provided authorities/scopes or change the existing tenant, `User.Read` permission or client capabilities.
+- Add allowlisted Graph codes, HTTP status, request IDs, authentication mode, profile-attempt count and Office-reported platform/version to support details. Discard raw provider messages, tokens, profile data and claim values. Diagnostic reads are size- and time-bounded.
+- Preserve signature templates, artwork, assignment and manifest **1.2.0.0**. Existing deployments need only the hosted-code publication after review, not a Microsoft 365 manifest update.
+
+Automated recovery/privacy checks pass; acceptance on the affected colleague's Windows client remains pending. See [the recovery flow and test steps](docs/SIGN-IN-RECOVERY.md).
+
 ## 1.2.0 — Desktop shared-mailbox activation
 
 The manifest omitted the shared-mailbox opt-in required on Mac, in web **Open another mailbox** windows and in promoted shared mailboxes in new Windows. Enable `SupportsSharedFolders` on the desktop form factor and update the manifest to **1.2.0.0**. See the [Microsoft support matrix and pending acceptance checks](docs/SHARED-MAILBOXES.md).

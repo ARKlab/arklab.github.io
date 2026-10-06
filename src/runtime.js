@@ -14,6 +14,7 @@ function notify(message) {
 }
 
 function messageFor(error) {
+  if(error.reauthenticationRequired) return isMobileOutlook()?'Open ARK signatures from a received email and choose Sign in again. Then start a new draft.':'Open ARK signatures and choose Sign in again. Microsoft rejected the profile request after a fresh-token retry.';
   if (isMobileOutlook() && error.message.startsWith('SIGN_IN_')) return 'ARK signatures could not connect. Open ARK signatures from a received email to reconnect, then start a new draft.';
   if (error.message==='SIGN_IN_REQUIRED') return 'Open ARK signatures and choose Continue with Microsoft 365 to allow access to your profile.';
   if (error.message==='OUTLOOK_UPDATE_REQUIRED') return 'Your Outlook needs an update to use ARK signatures. Your existing signature has been kept.';

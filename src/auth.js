@@ -2,8 +2,10 @@ import {createNestablePublicClientApplication,InteractionRequiredAuthError} from
 import {jsonRequest} from './network.js';
 import {signatureError} from './errors.js';
 import {remainingTime} from './deadline.js';
+import {claimsFor,copyClaims} from './graph-error.js';
 let appPromise;
 let pendingAuth;
+const recoveryContexts=new WeakMap();
 
 function timed(operation,timeoutMs) {
   let timer;
@@ -37,29 +39,50 @@ export function isConfigured(config) {
   return /^[a-f0-9-]{36}$/i.test(config.clientId||'') && /^[a-f0-9-]{36}$/i.test(config.tenantId||'');
 }
 
-export async function graphProfile(config,{interactive=false,loginHint='',recover=false,context={}}={}) {
+export async function graphProfile(config,{interactive=false,loginHint='',recover=false,reauthenticate=false,recoveryError,context={}}={}) {
   if (!isConfigured(config)) throw new Error('ADMIN_SETUP_REQUIRED');
   if (!Office.context.requirements.isSetSupported('NestedAppAuth','1.1')) throw new Error('OUTLOOK_UPDATE_REQUIRED');
   remainingTime(context,10000,13000);
   if (!appPromise) appPromise=timed(createNestablePublicClientApplication({auth:{clientId:config.clientId,authority:'https://login.microsoftonline.com/'+config.tenantId}}),10000).catch(error=>{appPromise=undefined;throw authError(error);});
   const app=await timed(appPromise,remainingTime(context,10000,13000));
   const request={scopes:['User.Read'],...(loginHint?{loginHint}:{})};
+  // A challenge belongs to the mailbox/app that received it, not a later account.
+  const recoveryKey=[config.clientId,config.tenantId,loginHint.toLowerCase()].join('|');
+  let challengeError=recoveryError&&recoveryContexts.get(recoveryError)===recoveryKey?recoveryError:undefined;
   let attempts=0;
+  let profileAttempts=0;
+  let interactionAttempted=false;
+  const explicitSignIn=interactive&&reauthenticate;
+  function failed(error) {
+    error.attempts=attempts;
+    error.profileAttempts=profileAttempts;
+    error.authMode=interactionAttempted?'interactive':'silent';
+    if(challengeError) {
+      copyClaims(challengeError,error);
+      error.claimsChallenge=challengeError.claimsChallenge;
+    }
+    recoveryContexts.set(error,recoveryKey);
+    return error;
+  }
+  async function popup(correlationId) {
+    interactionAttempted=true;
+    const claims=claimsFor(challengeError);
+    try {
+      return await brokerCall(app,'acquireTokenPopup',{...request,correlationId,...(claims?{claims}:{})},remainingTime(context,120000,13000));
+    }catch(error) {throw authError(error,correlationId);}
+  }
   async function acquire(forceRefresh) {
     const timeoutMs=remainingTime(context,15000,13000);
     const correlationId=typeof crypto!=='undefined'&&typeof crypto.randomUUID==='function'?crypto.randomUUID():undefined;
-    const tokenRequest={...request,...(correlationId?{correlationId}:{}),...(forceRefresh?{forceRefresh:true}:{})};
+    const claims=claimsFor(challengeError);
+    const tokenRequest={...request,...(correlationId?{correlationId}:{}),...(forceRefresh?{forceRefresh:true}:{}),...(claims?{claims}:{})};
     attempts++;
+    if(explicitSignIn) return popup(correlationId);
     try { return await brokerCall(app,'acquireTokenSilent',tokenRequest,timeoutMs); }
     catch(error) {
       // Never prompt during background insertion or retry arbitrary broker errors in a popup.
-      if(interactive && error instanceof InteractionRequiredAuthError && authError(error).message==='SIGN_IN_REQUIRED') {
-        try { return await brokerCall(app,'acquireTokenPopup',request,remainingTime(context,120000,13000)); }
-        catch(popupError) {
-          const failure=authError(popupError);
-          failure.interactionAttempted=true;
-          throw failure;
-        }
+      if(interactive && !interactionAttempted && error instanceof InteractionRequiredAuthError && authError(error).message==='SIGN_IN_REQUIRED') {
+        return popup(correlationId);
       }
       throw authError(error,correlationId);
     }
@@ -68,11 +91,11 @@ export async function graphProfile(config,{interactive=false,loginHint='',recove
     let token;
     try { token=await acquire(recover||attempt===1); }
     catch(error) {
-      error.attempts=attempts;
+      failed(error);
       const retryable=error.message==='SIGN_IN_BROKER_REJECTED'||(error.message==='SIGN_IN_UNAVAILABLE'&&['temporarily_unavailable','server_error','bridge_connection_reset','no_network_connectivity'].includes(error.msalCode));
       // Only retry completed, identified failures. Never duplicate an outstanding
       // broker call, or silently loop over MFA, consent, policy or unknown errors.
-      if(attempt!==0 || pendingAuth || error.interactionAttempted || !retryable) throw error;
+      if(attempt!==0 || pendingAuth || interactionAttempted || !retryable) throw error;
       if(remainingTime(context,2000,13000)<2000) throw error;
       await new Promise(resolve=>setTimeout(resolve,1000));
       remainingTime(context,15000,13000);
@@ -80,19 +103,24 @@ export async function graphProfile(config,{interactive=false,loginHint='',recove
     }
     remainingTime(context,8000,5000);
     if (token.account?.tenantId && token.account.tenantId.toLowerCase()!==config.tenantId.toLowerCase()) throw new Error('TENANT_MISMATCH');
+    const clientRequestId=typeof crypto!=='undefined'&&typeof crypto.randomUUID==='function'?crypto.randomUUID():undefined;
     try {
       // Only the signed-in person's profile; no directory-wide or mail permissions.
       const profile=await jsonRequest('https://graph.microsoft.com/v1.0/me?$select=displayName,mail,userPrincipalName,proxyAddresses,jobTitle,businessPhones,mobilePhone,officeLocation',{
-        headers:{Authorization:'Bearer '+token.accessToken},cache:'no-store',credentials:'omit'
+        headers:{Authorization:'Bearer '+token.accessToken,...(clientRequestId?{'client-request-id':clientRequestId,'return-client-request-id':'true'}:{})},cache:'no-store',credentials:'omit'
       },remainingTime(context,8000,5000));
       remainingTime(context,5000);
       return profile;
     }catch(error) {
-      // A rejected cached access token gets exactly one fresh-token retry.
-      if(error.message==='REQUEST_FAILED_401' && attempt===0) continue;
-      const failure=signatureError(error.message,'profile');
-      failure.attempts=attempts;
-      throw failure;
+      profileAttempts++;
+      // Keep the latest valid challenge through silent/interactive recovery.
+      if(claimsFor(error)) challengeError=error;
+      // A rejected cached access token gets one fresh-token retry. An explicit
+      // sign-in gets one profile request, never a second popup or retry loop.
+      if(error.message==='REQUEST_FAILED_401' && attempt===0 && !interactionAttempted) continue;
+      const failure=copyClaims(error,signatureError(error.message,'profile',{...error,clientRequestId}));
+      if(error.message==='REQUEST_FAILED_401') failure.reauthenticationRequired=true;
+      throw failed(failure);
     }
   }
 }
