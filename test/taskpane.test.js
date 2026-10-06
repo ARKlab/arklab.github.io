@@ -17,23 +17,28 @@ const compiled=await build({
 const bundle=JSON.parse(await readFile('branding.json','utf8'));
 const template=await readFile('templates/full.html','utf8');
 
-function panel({needsConsent=false,brokerFailure=false,settingsFailure=false,applyFailure=false,legacyMarkup=false,mobile=false,senderAddress='alex@ark-energy.eu',senderName}={}) {
+function panel({needsConsent=false,brokerFailure=false,settingsFailure=false,applyFailure=false,legacyMarkup=false,mobile=false,profileFailure=false,onRecovery,senderAddress='alex@ark-energy.eu',senderName}={}) {
   const elements=Object.fromEntries(['status','connect','apply','signature','support','diagnostics'].map(id=>[id,{
     disabled:true,textContent:'',innerHTML:'',handlers:{},
     addEventListener(event,handler){this.handlers[event]=handler;}
   }]));
   const calls=[];
+  const events=[];
   let ready;
   let fetchCount=0;
   const email='alex@ark-energy.eu';
+  const mailboxProfile={emailAddress:email};
   runInNewContext(compiled.outputFiles[0].text,{
     document:{getElementById:id=>legacyMarkup&&['support','diagnostics'].includes(id)?null:elements[id]},
-    Office:{onReady:handler=>{ready=handler;},context:{platform:mobile?'Android':'Mac',mailbox:{userProfile:{emailAddress:email},item:{from:mobile?{emailAddress:'received-from@example.org',displayName:'Received sender'}:{getAsync:callback=>callback({status:'succeeded',value:{emailAddress:senderAddress,displayName:senderName}})},body:{setSignatureAsync(){assert.fail('Opening a preview must not insert a signature.');}}}}}},
+    Office:{onReady:handler=>{ready=handler;},context:{platform:mobile?'Android':'Mac',mailbox:{userProfile:mailboxProfile,item:{from:mobile?{emailAddress:'received-from@example.org',displayName:'Received sender'}:{getAsync:callback=>callback({status:'succeeded',value:{emailAddress:senderAddress,displayName:senderName}})},body:{setSignatureAsync(){assert.fail('Opening a preview must not insert a signature.');}}}}}},
     URL,fixtures:{
-      fetchBundle(){if(settingsFailure&&fetchCount++===0) throw Object.assign(new Error('REQUEST_NETWORK_ERROR'),{stage:'settings'});return this.bundle;},
+      fetchBundle(){events.push('settings');if(settingsFailure&&fetchCount++===0) throw Object.assign(new Error('REQUEST_NETWORK_ERROR'),{stage:'settings'});return this.bundle;},
       bundle:{enabled:true,deployment:{},branding:bundle,revision:'panel-test',templates:{full:template},assets:{ark:{base64:'eA=='},artesian:{base64:'eA=='}}},
       graphProfile:async(_config,request)=>{
         calls.push(request);
+        events.push('graph');
+        if(profileFailure&&calls.length===1) throw Object.assign(new Error('REQUEST_FAILED_401'),{stage:'profile',reauthenticationRequired:true,attempts:2});
+        if(profileFailure&&calls.length>1&&onRecovery) await onRecovery(request);
         if(brokerFailure&&calls.length===1) throw Object.assign(new Error('SIGN_IN_BROKER_REJECTED'),{stage:'sign-in',microsoftCode:'7000024'});
         if(applyFailure&&calls.length>1) throw new Error('SIGN_IN_UNAVAILABLE');
         if(needsConsent&&!request.interactive) throw new Error('SIGN_IN_REQUIRED');
@@ -41,7 +46,7 @@ function panel({needsConsent=false,brokerFailure=false,settingsFailure=false,app
       }
     }
   });
-  return {elements,calls,ready};
+  return {elements,calls,events,mailboxProfile,ready};
 }
 
 test('opening the panel uses Outlook SSO without an interactive prompt or insertion',async()=>{
@@ -139,4 +144,48 @@ test('a cached previous HTML shell still shows errors and can recover',async()=>
   assert.equal(elements.connect.disabled,false);
   await elements.connect.handlers.click();
   assert.equal(elements.apply.disabled,false);
+});
+
+test('a final profile 401 offers explicit sign-in without fetching settings before the recovery',async()=>{
+  const {elements,calls,events,ready}=panel({profileFailure:true});
+  await ready();
+  assert.equal(calls.length,1);assert.equal(calls[0].interactive,false);
+  assert.equal(elements.connect.textContent,'Sign in again');
+  assert.equal(elements.apply.disabled,true);
+  assert.ok(elements.diagnostics.textContent.includes('Token attempts: 2'));
+  await elements.connect.handlers.click();
+  assert.equal(calls[1].interactive,true);assert.equal(calls[1].reauthenticate,true);
+  assert.equal(calls[1].recoveryError.message,'REQUEST_FAILED_401');
+  assert.deepEqual(events,['settings','graph','graph']);
+  assert.equal(elements.connect.textContent,'Refresh preview');assert.equal(elements.apply.disabled,false);
+  // Subsequent normal preview fetches fresh settings and no longer requests a popup.
+  await elements.connect.handlers.click();
+  assert.equal(calls[2].reauthenticate,false);assert.equal(calls[2].recoveryError,undefined);
+  assert.deepEqual(events,['settings','graph','graph','settings','graph']);
+});
+
+test('cancellation leaves one actionable sign-in button and diagnostics, without an automatic retry',async()=>{
+  const {elements,calls,ready}=panel({profileFailure:true,onRecovery:()=>{throw new Error('SIGN_IN_CANCELLED');}});
+  await ready();await elements.connect.handlers.click();
+  assert.equal(calls.length,2);assert.equal(elements.connect.textContent,'Sign in again');
+  assert.ok(elements.status.textContent.includes('Choose Sign in again'));
+  assert.equal(elements.connect.disabled,false);assert.equal(elements.apply.disabled,true);
+});
+
+test('a recovery double click cannot start overlapping authentication',async()=>{
+  let finish;
+  const {elements,calls,ready}=panel({profileFailure:true,onRecovery:()=>new Promise(resolve=>{finish=resolve;})});
+  await ready();
+  const pending=elements.connect.handlers.click();
+  await elements.connect.handlers.click();
+  assert.equal(calls.length,2);
+  finish();await pending;
+});
+
+test('switching mailbox discards the old manual-sign-in state and recovery challenge',async()=>{
+  const {elements,calls,mailboxProfile,ready}=panel({profileFailure:true});
+  await ready();mailboxProfile.emailAddress='other@ark-energy.eu';
+  await elements.connect.handlers.click();
+  assert.equal(calls[1].reauthenticate,false);assert.equal(calls[1].recoveryError,undefined);
+  assert.equal(calls[1].loginHint,'other@ark-energy.eu');
 });

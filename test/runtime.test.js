@@ -14,7 +14,7 @@ const compiled=await build({entryPoints:['src/runtime.js'],bundle:true,write:fal
 }]});
 const bundle={enabled:true,revision:'test',deployment:{clientId:'00000000-0000-0000-0000-000000000001',tenantId:'00000000-0000-0000-0000-000000000002'},branding:JSON.parse(await readFile('branding.json','utf8')),templates:{full:await readFile('templates/full.html','utf8'),reply:await readFile('templates/reply.html','utf8')},assets:{ark:{filename:'ark.png',base64:'eA=='},artesian:{filename:'artesian.png',base64:'eA=='}}};
 
-function runtime({persistent=false,senderAddress='alex@ark-energy.eu',senderName='Alex Example',composeType='newMail',proxyAddresses=[],platform='Mac',sessionFailure,signatureFailure}={}) {
+function runtime({persistent=false,profileFailure=false,senderAddress='alex@ark-energy.eu',senderName='Alex Example',composeType='newMail',proxyAddresses=[],platform='Mac',sessionFailure,signatureFailure}={}) {
   const calls={requests:[],sets:[],warnings:[],details:[],clears:0,completed:0,graph:0,popups:0,attachments:0};
   const handlers={};
   const mailboxProfile={emailAddress:'alex@ark-energy.eu',displayName:'Alex Example'};
@@ -30,8 +30,8 @@ function runtime({persistent=false,senderAddress='alex@ark-energy.eu',senderName
   }
   if(signatureFailure) item.body.setSignatureAsync=(_html,_options,cb)=>cb({status:'failed',error:{code:signatureFailure}});
   runInNewContext(compiled.outputFiles[0].text,{URL,clearTimeout,setTimeout:(fn,ms)=>setTimeout(fn,ms===1000?0:ms),console:{warn:text=>calls.details.push(text)},Office:{onReady(){},actions:{associate:(name,handler)=>{handlers[name]=handler;}},context:{platform,requirements:{isSetSupported:()=>true},mailbox:{item,userProfile:mailboxProfile}}},fixtures:{bundle,
-    create:async()=>({acquireTokenSilent:async request=>{calls.requests.push(request);if(persistent||calls.requests.length===1)throw Object.assign(new Error('PRIVATE_PROVIDER_PAYLOAD'),{errorCode:'7000024'});return {accessToken:'SYNTHETIC_TOKEN',account:{tenantId:bundle.deployment.tenantId}};},acquireTokenPopup:()=>{calls.popups++;assert.fail('No background popup');}}),
-    graph:async()=>{calls.graph++;return {displayName:mailboxProfile.displayName,mail:mailboxProfile.emailAddress,jobTitle:'Director',businessPhones:['+353 83 111 2222'],proxyAddresses};}
+    create:async()=>({acquireTokenSilent:async request=>{calls.requests.push(request);if(persistent||(!profileFailure&&calls.requests.length===1))throw Object.assign(new Error('PRIVATE_PROVIDER_PAYLOAD'),{errorCode:'7000024'});return {accessToken:'SYNTHETIC_TOKEN',account:{tenantId:bundle.deployment.tenantId}};},acquireTokenPopup:()=>{calls.popups++;assert.fail('No background popup');}}),
+    graph:async()=>{calls.graph++;if(profileFailure) throw Object.assign(new Error('REQUEST_FAILED_401'),{httpStatus:401,graphCode:'InvalidAuthenticationToken',requestId:'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'});return {displayName:mailboxProfile.displayName,mail:mailboxProfile.emailAddress,jobTitle:'Director',businessPhones:['+353 83 111 2222'],proxyAddresses};}
   }});
   return {calls,sender,run:(name='arkOnCompose')=>handlers[name]({completed:()=>calls.completed++})};
 }
@@ -47,6 +47,19 @@ test('automatic compose silently recovers, inserts once and clears the old warni
   assert.equal(calls.clears,1);
   assert.equal(calls.completed,1);
   assert.equal(calls.popups,0);
+});
+
+test('a repeated profile 401 preserves the draft and directs explicit sign-in on desktop and mobile',async()=>{
+  for(const platform of ['Mac','PC','OfficeOnline','Android']) {
+    const {run,calls}=runtime({platform,profileFailure:true});await run();
+    assert.equal(calls.requests.length,2);assert.equal(calls.graph,2);
+    assert.equal(calls.popups,0);assert.equal(calls.sets.length,0);assert.equal(calls.attachments,0);assert.equal(calls.completed,1);
+    assert.ok(calls.warnings[0].includes('Sign in again'));assert.ok(calls.warnings[0].length<=150);
+    if(platform==='Android') assert.ok(calls.warnings[0].includes('received email'));
+    assert.ok(calls.details[0].includes('Graph code: InvalidAuthenticationToken'));
+    assert.ok(calls.details[0].includes('Profile attempts: 2'));
+    assert.equal(calls.details[0].includes('SYNTHETIC_TOKEN'),false);
+  }
 });
 test('mobile event runtime signs in silently and reuses logos on a subsequent From event',async()=>{
   for (const platform of ['Android','iOS']) {

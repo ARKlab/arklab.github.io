@@ -86,6 +86,8 @@ For routine wording or branding updates, edit `branding.json` or the templates a
 
 ## Release and deployment status
 
+Package **1.2.1** adds explicit **Sign in again** recovery after repeated profile 401 responses and richer safe diagnostics. See [recovery and acceptance](SIGN-IN-RECOVERY.md). The manifest remains **1.2.0.0**; an existing installation of that manifest needs no Microsoft 365 update for this patch.
+
 The single-tenant **ARK central signatures** app is registered. Its identifiers are configured in `deployment.json`, and its only requested Graph permission is delegated `User.Read`. No client secret is used.
 
 The installation began on 8 September 2026 and was subsequently expanded to three named users. The first user confirmed availability on Mac, web and new Windows Outlook, and approved received full and compact forward signatures. On 9 September 2026, the owner confirmed that a second user's add-in appeared automatically after the deployment delay and accepted the transition to general release. The third user's availability remains unconfirmed.
